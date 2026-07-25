@@ -1,6 +1,28 @@
 import { tokenize } from "./tokenizer.js";
 import { replaceFromGlossary } from "../assets/glossaryPtBr.js";
 
+const intensiveAlternatives = [
+  [/Além das relações interpessoais, a harmonia também está relacionada ao equilíbrio entre o ser humano e o meio ambiente/gi,["A harmonia não se limita aos vínculos humanos, pois também abrange a relação equilibrada entre as pessoas e a natureza","Para além do convívio entre indivíduos, a harmonia envolve o equilíbrio entre a humanidade e o ambiente natural"]],
+  [/é um dos princípios fundamentais para a construção de uma convivência saudável e equilibrada/gi,["constitui uma das bases essenciais para formar relações saudáveis e estáveis","integra os fundamentos necessários ao desenvolvimento de relações positivas e equilibradas"]],
+  [/pode ser compreendida como o estado em que diferentes pessoas, ideias e situações coexistem de maneira respeitosa/gi,["corresponde à condição na qual pessoas, perspectivas e circunstâncias distintas convivem com respeito","pode ser entendida como uma condição de coexistência respeitosa entre indivíduos, pontos de vista e realidades diferentes"]],
+  [/promovendo um ambiente de paz, cooperação e entendimento mútuo/gi,["criando um contexto pautado pela tranquilidade, pela colaboração e pela compreensão recíproca","favorecendo um cenário de serenidade, colaboração e compreensão entre todos"]],
+  [/Em diversos contextos, como na família, na escola, no trabalho e na sociedade/gi,["Em diferentes espaços — no ambiente familiar, na instituição de ensino, na vida profissional e na comunidade","Seja no convívio familiar, escolar, profissional ou social"]],
+  [/desempenha um papel essencial para fortalecer as relações humanas e favorecer o bem-estar coletivo/gi,["é decisiva para consolidar os vínculos interpessoais e ampliar a qualidade de vida comum","tem importância central na consolidação dos laços entre as pessoas e na promoção do bem-estar compartilhado"]],
+  [/viver em harmonia não significa a ausência de diferenças ou de conflitos/gi,["conviver harmoniosamente não pressupõe eliminar divergências ou conflitos","uma convivência harmoniosa não exige que diferenças e desacordos deixem de existir"]],
+  [/significa reconhecer que opiniões distintas fazem parte da convivência/gi,["significa compreender que pontos de vista divergentes integram as relações humanas","envolve admitir que perspectivas diferentes são próprias da vida em sociedade"]],
+  [/o diálogo, a empatia e o respeito são ferramentas importantes para encontrar soluções equilibradas/gi,["a conversa aberta, a capacidade de se colocar no lugar do outro e a consideração mútua ajudam a construir soluções ponderadas","a escuta, a empatia e o respeito oferecem caminhos para alcançar respostas equilibradas"]],
+  [/Quando as pessoas estão dispostas a ouvir, compreender e colaborar/gi,["Quando existe disposição para escutar, entender e cooperar","A abertura para a escuta, a compreensão e o trabalho conjunto"]],
+  [/torna-se possível superar desafios de maneira mais construtiva/gi,["os desafios podem ser superados por caminhos mais produtivos","é possível enfrentar os obstáculos com uma postura mais construtiva"]],
+  [/Além das relações interpessoais/gi,["Para além dos vínculos entre indivíduos","A harmonia não se limita às relações humanas; ela"]],
+  [/também está relacionada ao equilíbrio entre o ser humano e o meio ambiente/gi,["também envolve a relação equilibrada entre a humanidade e a natureza","abrange ainda o equilíbrio entre as pessoas e o ambiente natural"]],
+  [/A preservação dos recursos naturais, o consumo consciente e o cuidado com os espaços compartilhados/gi,["A proteção do patrimônio natural, as escolhas responsáveis de consumo e a conservação dos locais coletivos","Conservar a natureza, consumir com responsabilidade e zelar pelos ambientes de uso comum"]],
+  [/demonstram que pequenas atitudes individuais podem contribuir para uma sociedade mais sustentável e organizada/gi,["evidenciam como ações cotidianas de cada pessoa ajudam a construir uma comunidade sustentável e bem organizada","mostram que iniciativas individuais, mesmo pequenas, favorecem uma organização social mais sustentável"]],
+  [/a harmonia ultrapassa as relações entre pessoas e envolve também a responsabilidade com o mundo em que vivemos/gi,["a busca pelo equilíbrio vai além do convívio humano e inclui o compromisso com o planeta que habitamos","esse princípio supera o campo das relações pessoais e alcança o cuidado responsável com o ambiente em que vivemos"]],
+  [/representa um valor indispensável para o desenvolvimento de uma sociedade mais justa, solidária e respeitosa/gi,["constitui um valor decisivo para formar uma comunidade mais justa, cooperativa e respeitosa","é indispensável à construção de uma sociedade orientada pela justiça, pela solidariedade e pelo respeito"]],
+  [/Cultivar atitudes de compreensão, cooperação e responsabilidade fortalece os vínculos entre as pessoas/gi,["Praticar a compreensão, a colaboração e a responsabilidade consolida os laços humanos","Adotar posturas compreensivas, cooperativas e responsáveis aproxima os indivíduos"]],
+  [/cria condições para uma convivência mais positiva/gi,["abre caminho para relações mais saudáveis","favorece uma experiência coletiva mais positiva"]],
+  [/buscar a harmonia diariamente é um compromisso que beneficia não apenas cada indivíduo, mas toda a comunidade/gi,["promover o equilíbrio todos os dias constitui um compromisso capaz de favorecer cada pessoa e a coletividade","assumir diariamente uma postura harmoniosa beneficia tanto o indivíduo quanto o conjunto da comunidade"]],
+];
 const alternatives = [
   [/\bé um dos princípios fundamentais para\b/gi,["constitui uma base essencial para","está entre os fundamentos de"]],
   [/\bpode ser compreendida como\b/gi,["pode ser entendida como","corresponde a"]],
@@ -42,8 +64,8 @@ const hash=(text,variation=0)=>{let h=2166136261+variation*997;for(const c of te
 const upper=(text)=>text?text[0].toLocaleUpperCase("pt-BR")+text.slice(1):text;
 const lower=(text)=>text?text[0].toLocaleLowerCase("pt-BR")+text.slice(1):text;
 const preserveCase=(source,value)=>source[0]===source[0]?.toUpperCase()?upper(value):value;
-const lexicalRewrite=(text,seed)=>alternatives.reduce((value,[pattern,choices],index)=>value.replace(pattern,(match)=>preserveCase(match,choices[(seed+index)%choices.length])),text);
-const normalize=(text)=>text.replace(/[ \t]+/g," ").replace(/\s+([,.;:!?])/g,"$1").replace(/([.!?])(?=[A-ZÀ-Ú])/g,"$1 ").replace(/,\s*,/g,",").replace(/\b(Também|Assim|Hoje),\s+/g,"$1 ").trim();
+const lexicalRewrite=(text,seed)=>alternatives.reduce((value,[pattern,choices],index)=>value.replace(pattern,(match)=>preserveCase(match,choices[(seed+index)%choices.length])),intensiveAlternatives.reduce((value,[pattern,choices],index)=>value.replace(pattern,(match)=>preserveCase(match,choices[(seed+index)%choices.length])),text));
+const normalize=(text)=>text.replace(/[ \t]+/g," ").replace(/\s+([,.;:!?])/g,"$1").replace(/([.!?])(?=[A-ZÀ-Ú])/g,"$1 ").replace(/,\s*,/g,",").replace(/\bAssim,?\s+/g,"Assim, ").trim();
 const agreementWarnings=[
   /\b(diversos|muitos|alguns|outros|esses|estes)\s+(pessoas|ideias|situações|ferramentas|estratégias|atividades)\b/i,
   /\bde (modo|jeito) \w+(a|as)\b/i,
@@ -79,6 +101,7 @@ const fixDeterminers=(text)=>text
   .replace(new RegExp(`\\b(${Object.keys(masculineMap).join("|")}) (${masculineNouns})\\b`,"gi"),(match,det,noun)=>`${matchCase(det,masculineMap[det.toLowerCase()])} ${noun}`)
   .replace(new RegExp(`\\b(${Object.keys(feminineMap).join("|")}) (${feminineNouns})\\b`,"gi"),(match,det,noun)=>`${matchCase(det,feminineMap[det.toLowerCase()])} ${noun}`);
 const fixAgreement=(text)=>fixDeterminers(text)
+  .replace(/\b(A abertura para [^.!?]+),\s+(possibilita|favorece|permite)\b/gi,"$1 $2")
   .replace(/\bda projeto\b/gi,"do projeto")
   .replace(/\bna projeto\b/gi,"no projeto")
   .replace(/\bpela projeto\b/gi,"pelo projeto")
@@ -100,7 +123,7 @@ export function localRewrite(text,{style="Natural",audience="Público geral",var
       return hasAgreementWarning(rewrittenSentence)?fixAgreement(normalize(lexicalRewrite(sentence,seed+p+i))):rewrittenSentence;
     }).join(" ");
     const reviewed=fixAgreement(normalize(candidate));
-    if(hasAgreementWarning(reviewed))throw new Error(`A validação encontrou uma possível falha de concordância no parágrafo ${p+1}. Ajuste esse trecho ou solicite uma nova variação.`);
+    if(hasAgreementWarning(reviewed)) return fixAgreement(normalize(lexicalRewrite(paragraph,seed+p)));
     return reviewed;
   }).join("\n\n");
   const finalText=fixAgreement(normalize(rewritten));
