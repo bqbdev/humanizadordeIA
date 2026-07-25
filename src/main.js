@@ -15,9 +15,7 @@ const state = {
   original: saved.original ?? SAMPLE,
   result: saved.result ?? "",
   style: saved.style ?? "Natural",
-  audience: saved.audience ?? "Público geral",
-  size: saved.size ?? "keep",
-  targetWords: saved.targetWords ?? 250,
+  audience: saved.audience ?? "Público geral",  targetWords: saved.targetWords ?? 250,
   variation: 0,
   history: storage.loadHistory(),
   controller: null,
@@ -56,10 +54,6 @@ document.querySelector("#app").innerHTML = `
         <div class="field">
           <label for="styleSelect">Estilo</label>
           <select id="styleSelect">${["Natural","Formal","Acadêmico","Didático","Objetivo","Conversacional","Profissional"].map(v => `<option ${v === state.style ? "selected" : ""}>${v}</option>`).join("")}</select>
-        </div>
-        <div class="field">
-          <label for="audienceSelect">Para quem</label>
-          <select id="audienceSelect">${["Público geral","Ensino Fundamental","Ensino Médio","Faculdade","Profissional","Cliente","WhatsApp","Redes sociais"].map(v => `<option ${v === state.audience ? "selected" : ""}>${v}</option>`).join("")}</select>
         </div>
         <div class="toolbar-spacer"></div>
         <div class="undo-actions">
@@ -170,7 +164,7 @@ const toast = (message, type = "success") => {
 };
 
 const save = () => {
-  storage.saveDocument({ original: state.original, result: state.result, style: state.style, audience: state.audience });
+  storage.saveDocument({ original: state.original, result: state.result, style: state.style });
   $(".save-status").classList.add("saved");
   setTimeout(() => $(".save-status").classList.remove("saved"), 800);
 };
@@ -236,7 +230,7 @@ async function runRewrite(isVariation = false) {
     const result = await rewriteText(state.original, { ...state, ...prefs }, state.controller.signal);
     state.result = result;
     resultEl.textContent = result;
-    state.history = storage.pushHistory({ id: crypto.randomUUID(), date: new Date().toISOString(), original: state.original, result, style: state.style, audience: state.audience });
+    state.history = storage.pushHistory({ id: crypto.randomUUID(), date: new Date().toISOString(), original: state.original, result, style: state.style });
     updateResult(); renderHistory(); save();
     toast(isVariation ? "Nova variação criada." : "Texto aprimorado com sucesso.");
   } catch (error) {
@@ -255,11 +249,10 @@ function openDrawer(selector) {
 function closeDrawers() { $$(".drawer").forEach(d => d.classList.remove("open")); $("#backdrop").classList.remove("show"); }
 
 function renderHistory() {
-  $("#historyList").innerHTML = state.history.length ? state.history.map(v => `<button class="history-item" data-id="${v.id}"><span>${new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(v.date))}</span><strong>${v.result.slice(0, 72)}${v.result.length > 72 ? "…" : ""}</strong><small>${v.style} · ${v.audience}</small></button>`).join("") : `<div class="history-empty">${icon("history", 28)}<p>Nenhuma versão criada ainda.</p></div>`;
+  $("#historyList").innerHTML = state.history.length ? state.history.map(v => `<button class="history-item" data-id="${v.id}"><span>${new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(v.date))}</span><strong>${v.result.slice(0, 72)}${v.result.length > 72 ? "…" : ""}</strong><small>${v.style}</small></button>`).join("") : `<div class="history-empty">${icon("history", 28)}<p>Nenhuma versão criada ainda.</p></div>`;
 }
 
 $("#styleSelect").addEventListener("change", e => { state.style = e.target.value; scheduleSave(); });
-$("#audienceSelect").addEventListener("change", e => { state.audience = e.target.value; scheduleSave(); });
 $("#rewriteBtn").addEventListener("click", () => runRewrite());
 $("#variationBtn").addEventListener("click", () => runRewrite(true));
 $("#clearBtn").addEventListener("click", () => { state.original = ""; originalEl.value = ""; updateAnalysis(); scheduleSave(); originalEl.focus(); });
@@ -294,8 +287,8 @@ $("#saveSettings").addEventListener("click", () => {
 $("#historyList").addEventListener("click", e => {
   const item = e.target.closest("[data-id]"); if (!item) return;
   const version = state.history.find(v => v.id === item.dataset.id); if (!version) return;
-  Object.assign(state, { original: version.original, result: version.result, style: version.style, audience: version.audience });
-  originalEl.value = state.original; resultEl.textContent = state.result; $("#styleSelect").value = state.style; $("#audienceSelect").value = state.audience;
+  Object.assign(state, { original: version.original, result: version.result, style: version.style });
+  originalEl.value = state.original; resultEl.textContent = state.result; $("#styleSelect").value = state.style;
   updateAnalysis(); updateResult(); save(); closeDrawers(); toast("Versão restaurada.");
 });
 
