@@ -32,7 +32,3 @@ yarn-error.log*
 /work/
 
 # arquivos-fonte de imagem na raiz (cópias publicadas ficam em public/)
-/clareia.png.png
-/zerochat.png
-
-/clareia.png
