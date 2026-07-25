@@ -87,7 +87,7 @@ document.querySelector("#app").innerHTML = `
           </header>
           <div id="resultText" class="result-text ${state.result ? "" : "empty"}" contenteditable="true" role="textbox" aria-label="Texto reescrito" data-placeholder="Seu texto aprimorado aparecerá aqui.">${state.result}</div>
           <footer class="panel-foot result-foot">
-            <button class="text-btn" id="variationBtn" ${state.result ? "" : "disabled"}>${icon("sparkle", 15)} Variação contextual</button>
+            <button class="text-btn" id="variationBtn" ${state.result ? "" : "disabled"}>${icon("sparkle", 15)} Nova variação</button>
             <div>
               <button class="icon-btn" id="copyBtn" title="Copiar resultado" ${state.result ? "" : "disabled"}>${icon("copy")}</button>
               <div class="export-wrap">
@@ -247,15 +247,15 @@ async function runRewrite(isVariation = false) {
   state.controller?.abort();
   state.controller = new AbortController();
   const button = $("#rewriteBtn");
-  button.disabled = true; button.classList.add("loading"); button.querySelector("span").textContent = isVariation ? "Preparando modo contextual" : "Reescrevendo";
+  button.disabled = true; button.classList.add("loading"); button.querySelector("span").textContent = isVariation ? "Criando nova variação" : "Reescrevendo";
   resultEl.classList.remove("empty"); resultEl.innerHTML = `<div class="result-skeleton"><i></i><i></i><i></i><i></i><i></i></div>`;
   try {
-    const result = await rewriteText(state.original, { ...state, ...prefs, advanced: isVariation, signal: state.controller.signal, onProgress: (label) => { button.querySelector("span").textContent = label; } });
+    const result = await rewriteText(state.original, { ...state, ...prefs, signal: state.controller.signal });
     state.result = result;
     resultEl.textContent = result;
     state.history = storage.pushHistory({ id: crypto.randomUUID(), date: new Date().toISOString(), original: state.original, result, style: state.style });
     updateResult(); renderHistory(); save();
-    toast(isVariation ? "Variação contextual criada." : "Texto reescrito com rapidez.");
+    toast(isVariation ? "Nova variação criada instantaneamente." : "Texto reescrito com rapidez.");
   } catch (error) {
     resultEl.textContent = state.result;
     updateResult();
