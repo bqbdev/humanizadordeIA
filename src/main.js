@@ -10,7 +10,7 @@ const SAMPLE = `Escrever bem não significa usar palavras difíceis. Um bom text
 Com apoio da inteligência artificial, é possível revisar a estrutura, ajustar o tom e encontrar formas mais naturais de dizer a mesma coisa. A tecnologia, porém, deve preservar a intenção de quem escreve — não substituir sua voz.`;
 
 const saved = storage.loadDocument();
-const prefs = { theme: "light", apiKey: "", model: "gemini-3.5-flash", mode: "gemini", ...storage.loadSettings() };
+const prefs = { theme: "light", ...storage.loadSettings(), mode: "local", apiKey: "", model: "" };
 const state = {
   original: saved.original ?? SAMPLE,
   result: saved.result ?? "",
@@ -116,7 +116,7 @@ document.querySelector("#app").innerHTML = `
       </div>
 
       <div class="primary-row">
-        <div class="privacy-note"><span>${icon("key", 15)}</span><span id="providerLabel">${prefs.mode === "gemini" ? "Gemini · sua chave fica apenas neste navegador" : "Modo local · sem envio de dados"}</span></div>
+        <div class="privacy-note"><span>${icon("key", 15)}</span><span id="providerLabel">Motor local · nenhuma chave · seu texto não sai do navegador</span></div>
         <button class="primary-btn" id="rewriteBtn">${icon("sparkle", 18)} <span>Aprimorar texto</span> ${icon("arrow", 18)}</button>
       </div>
     </section>
@@ -235,7 +235,7 @@ resultEl.addEventListener("input", () => { state.result = resultEl.innerText; up
 
 async function runRewrite(isVariation = false) {
   if (!state.original.trim()) return toast("Escreva ou cole um texto primeiro.", "error");
-  if (prefs.mode === "gemini" && !prefs.apiKey) { openDrawer("#settingsDrawer"); return toast("Adicione sua chave gratuita do Gemini.", "error"); }
+  prefs.mode = "local";
   state.variation = isVariation ? state.variation + 1 : 0;
   state.controller?.abort();
   state.controller = new AbortController();
@@ -299,7 +299,7 @@ $("#themeBtn").addEventListener("click", () => {
   document.querySelector('meta[name="theme-color"]').content = prefs.theme === "dark" ? "#171816" : "#f7f7f4";
   storage.saveSettings(prefs);
 });
-$("#settingsBtn").addEventListener("click", () => openDrawer("#settingsDrawer"));
+$("#settingsBtn").addEventListener("click", () => toast("O motor funciona localmente, sem chaves e sem enviar seu texto."));
 $("#historyBtn").addEventListener("click", () => openDrawer("#historyDrawer"));
 $("#backdrop").addEventListener("click", closeDrawers);
 $$(".drawer-close").forEach(btn => btn.addEventListener("click", closeDrawers));

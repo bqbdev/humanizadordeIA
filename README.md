@@ -1,6 +1,6 @@
 # Clareia — Editor Universal de Texto IA
 
-Editor profissional de texto em português, preparado para GitHub Pages. O Clareia combina análise linguística local em tempo real com reescrita por IA, controle de público, estilo e tamanho, comparação visual, histórico e exportações.
+Editor profissional de texto em português, preparado para GitHub Pages. O Clareia funciona integralmente no navegador, sem chaves de API, contas ou envio do texto a serviços externos.
 
 ## Recursos
 
@@ -15,19 +15,13 @@ Editor profissional de texto em português, preparado para GitHub Pages. O Clare
 - Tema claro/escuro, layout responsivo e atalho `Ctrl/Cmd + Enter`.
 - Modo de revisão local quando o usuário não quiser usar uma API.
 
-## Escolha da IA
+## Funcionamento sem chaves
 
-O provedor principal é o **Google Gemini**, usando por padrão `gemini-3.5-flash` (o nome do modelo é configurável na interface).
+O motor local ajusta repetição, uniformidade de frases, conectivos, redundâncias, variação estrutural, clareza e ritmo. Esses sinais são semelhantes aos observados por classificadores de texto, mas nenhum resultado pode garantir uma classificação específica: detectores de IA são probabilísticos e podem errar inclusive com textos humanos.
 
-Ele foi escolhido porque oferece boa qualidade de escrita em português, janela de contexto ampla, baixa latência, API REST simples e modelos elegíveis à camada gratuita. A alternativa Hugging Face oferece apenas uma pequena quantidade de créditos mensais para contas gratuitas, enquanto modelos locais de qualidade comparável exigiriam downloads grandes, muita memória e teriam desempenho inconsistente em celulares.
+## Arquitetura local
 
-Como o GitHub Pages é uma hospedagem puramente estática, não há backend para proteger uma chave central. Por isso, **cada usuário informa sua própria chave**, que permanece no LocalStorage do navegador e é enviada somente ao endpoint oficial do Gemini. Nunca inclua uma chave no repositório. Para um produto público com chave financiada pelo proprietário, adicione futuramente um backend/proxy com autenticação e limites.
-
-Os limites exatos da camada gratuita variam por modelo, região e conta. Consulte a página oficial de preços e o painel do Google AI Studio antes de publicar em produção:
-
-- https://ai.google.dev/gemini-api/docs/pricing
-- https://ai.google.dev/gemini-api/docs/rate-limits
-
+A aplicação usa regras linguísticas determinísticas no navegador. O motor reduz redundâncias, quebra períodos excessivamente longos, varia conectivos, ajusta vocabulário conforme público e estilo e controla compressão ou expansão. Não há chamadas a APIs, contas, cotas ou custos de inferência.
 ## Arquitetura
 
 ```text
@@ -67,16 +61,7 @@ npm run build
 npm run preview
 ```
 
-## Configurar a API
-
-1. Acesse https://aistudio.google.com/apikey e crie uma chave.
-2. Abra o Clareia e clique no ícone de engrenagem.
-3. Selecione **Google Gemini**, cole a chave e salve.
-4. Caso o modelo padrão deixe de estar disponível, altere o campo **Modelo** para um modelo atual compatível com `generateContent`.
-
-A chave é salva apenas no navegador atual. Limpar os dados do site remove a chave, o texto e o histórico.
-
-## Publicar no GitHub Pages
+## Uso`n`nAbra o editor, cole o texto e clique em **Aprimorar texto**. Nenhuma configuração, conta ou chave é necessária.`n`n## Publicar no GitHub Pages
 
 ### Pela interface do GitHub
 
@@ -128,18 +113,10 @@ jobs:
 
 Depois selecione **GitHub Actions** como fonte em **Settings → Pages**. O `base: "./"` do Vite faz os assets funcionarem tanto em domínio próprio quanto em subpastas.
 
-## Trocar o provedor de IA
-
-1. Crie um adaptador em `src/providers/` que receba `{ prompt, signal, ...credenciais }` e retorne apenas uma string.
-2. Registre-o em `src/services/aiService.js`.
-3. Adicione os campos do provedor na gaveta de configurações.
-4. Mantenha prompts exclusivamente em `src/prompt/prompts.js`.
-5. Nunca salve segredos no código ou no repositório. Em implantação pública com chave compartilhada, use um proxy seguro.
-
 ## Privacidade e limitações
 
 - Métricas, histórico e modo local são processados no dispositivo.
-- No modo Gemini, o texto é enviado ao Google após ação explícita do usuário.
+- Todo o processamento textual ocorre no navegador; o texto não é enviado a terceiros.
 - As heurísticas locais de legibilidade e voz passiva são indicativas; não substituem revisão humana.
 - DOCX e PDF carregam bibliotecas de exportação sob demanda. A primeira exportação exige conexão.
 - A IA pode alterar nuances. O comparador existe para facilitar a revisão antes de usar o resultado.
