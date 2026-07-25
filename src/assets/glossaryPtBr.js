@@ -30,8 +30,34 @@ export const glossaryPtBr = {
   recurso:["meio"], recursos:["meios"], reforçar:["evidenciar","ampliar"], reforça:["evidencia","amplia"],
   regular:["habitual","convencional"], relevante:["significativo","importante"], sala:["espaço","ambiente"], salas:["espaços","ambientes"],
   sofisticado:["avançado","complexo"], sofisticados:["avançados","complexos"], tecnologia:["solução digital"], tecnológicos:["digitais","de tecnologia"],
-  turma:["classe"], utilizar:["usar","empregar"], variedade:["diversidade","amplitude"]
-};
+  turma:["classe"], utilizar:["usar","empregar"], variedade:["diversidade","amplitude"],
+  abordar:["tratar","examinar"], aborda:["trata","examina"], abordam:["tratam","examinam"],
+  analisar:["examinar","avaliar"], analisa:["examina","avalia"], analisam:["examinam","avaliam"], análise:["avaliação","investigação"],
+  aplicar:["empregar","executar"], aplica:["emprega","executa"], aplicam:["empregam","executam"], aplicação:["execução","utilização"],
+  apoiar:["auxiliar","amparar"], apoia:["auxilia","ampara"], apoiam:["auxiliam","amparam"],
+  avaliar:["examinar","verificar"], avalia:["examina","verifica"], avaliam:["examinam","verificam"],
+  buscar:["procurar","pretender"], busca:["procura","pretende"], buscam:["procuram","pretendem"],
+  considerar:["avaliar","examinar"], considera:["avalia","examina"], consideram:["avaliam","examinam"],
+  construir:["elaborar","produzir"], constrói:["elabora","produz"], constroem:["elaboram","produzem"],
+  criar:["elaborar","produzir"], cria:["elabora","produz"], criam:["elaboram","produzem"], criação:["elaboração","produção"],
+  demonstrar:["evidenciar","mostrar"], demonstra:["evidencia","mostra"], demonstram:["evidenciam","mostram"],
+  destacar:["evidenciar","salientar"], destaca:["evidencia","salienta"], destacam:["evidenciam","salientam"],
+  estabelecer:["definir","determinar"], estabelece:["define","determina"], estabelecem:["definem","determinam"],
+  estimular:["incentivar","favorecer"], estimula:["incentiva","favorece"], estimulam:["incentivam","favorecem"],
+  garantir:["assegurar","preservar"], garante:["assegura","preserva"], garantem:["asseguram","preservam"],
+  identificar:["reconhecer","detectar"], identifica:["reconhece","detecta"], identificam:["reconhecem","detectam"],
+  observar:["verificar","perceber"], observa:["verifica","percebe"], observam:["verificam","percebem"],
+  oferecer:["disponibilizar","proporcionar"], oferece:["disponibiliza","proporciona"], oferecem:["disponibilizam","proporcionam"],
+  promover:["estimular","incentivar"], promove:["estimula","incentiva"], promovem:["estimulam","incentivam"],
+  proporcionar:["oferecer","possibilitar"], proporciona:["oferece","possibilita"], proporcionam:["oferecem","possibilitam"],
+  reconhecer:["identificar","perceber"], reconhece:["identifica","percebe"], reconhecem:["identificam","percebem"],
+  relacionar:["associar","conectar"], relaciona:["associa","conecta"], relacionam:["associam","conectam"],
+  representar:["simbolizar","expressar"], representa:["simboliza","expressa"], representam:["simbolizam","expressam"],
+  verificar:["examinar","conferir"], verifica:["examina","confere"], verificam:["examinam","conferem"],
+  ampla:["abrangente","extensa"], amplo:["abrangente","extenso"], amplas:["abrangentes","extensas"], amplos:["abrangentes","extensos"],
+  eficaz:["eficiente","efetivo"], eficazes:["eficientes","efetivos"], significativa:["expressiva","relevante"], significativo:["expressivo","relevante"],
+  processo:["procedimento","percurso"], processos:["procedimentos","percursos"], resultado:["efeito","produto"], resultados:["efeitos","produtos"],
+  conhecimento:["saber","aprendizado"], conhecimentos:["saberes","aprendizados"], participação:["colaboração","atuação"],};
 
 const keepCase=(source,replacement)=>source[0]===source[0]?.toLocaleUpperCase("pt-BR")?replacement[0].toLocaleUpperCase("pt-BR")+replacement.slice(1):replacement;
 export function replaceFromGlossary(text,seed=0){

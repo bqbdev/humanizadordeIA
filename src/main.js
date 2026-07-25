@@ -4,6 +4,8 @@ import { storage } from "./services/storageService.js";
 import { diffWords } from "./utils/diff.js";
 import { exportTxt, exportMarkdown, exportDocx, exportPdf } from "./services/exportService.js";
 import { icon } from "./utils/icons.js";
+import clareiaLogo from "./assets/clareia.png";
+import zerochatLogo from "./assets/zerochat.png";
 
 const SAMPLE = `Escrever bem não significa usar palavras difíceis. Um bom texto conduz o leitor com clareza, apresenta cada ideia no momento certo e evita repetições que não acrescentam significado.
 
@@ -28,7 +30,7 @@ document.querySelector('meta[name="theme-color"]').content = prefs.theme === "da
 document.querySelector("#app").innerHTML = `
   <header class="topbar">
     <a class="brand" href="#" aria-label="Clareia — início">
-      <img class="brand-logo" src="./clareia.png" alt="Clareia" /><em>beta</em>
+      <img class="brand-logo" src="${clareiaLogo}" alt="Clareia" /><em>beta</em>
     </a>
     <nav class="top-actions" aria-label="Ações">
       <span class="save-status"><span></span> Salvo neste dispositivo</span>
