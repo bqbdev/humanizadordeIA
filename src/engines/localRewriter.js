@@ -2,6 +2,18 @@ import { tokenize } from "./tokenizer.js";
 import { replaceFromGlossary } from "../assets/glossaryPtBr.js";
 
 const alternatives = [
+  [/\bé um dos princípios fundamentais para\b/gi,["constitui uma base essencial para","está entre os fundamentos de"]],
+  [/\bpode ser compreendida como\b/gi,["pode ser entendida como","corresponde a"]],
+  [/\bpode ser compreendido como\b/gi,["pode ser entendido como","corresponde a"]],
+  [/\bdesempenha um papel essencial para\b/gi,["é decisiva para","tem importância central para"]],
+  [/\bdesempenha um papel fundamental para\b/gi,["é decisiva para","tem importância central para"]],
+  [/\bfazem parte da\b/gi,["integram a","são próprias da"]],
+  [/\btorna-se possível\b/gi,["passa a ser possível","é possível"]],
+  [/\bestá relacionada ao\b/gi,["liga-se ao","também envolve o"]],
+  [/\bdemonstram que\b/gi,["mostram que","evidenciam que"]],
+  [/\bEm síntese\b/gi,["Em resumo","De modo geral"]],
+  [/\brepresenta um valor indispensável para\b/gi,["constitui um valor decisivo para","é indispensável ao"]],
+  [/\bcria condições para\b/gi,["abre caminho para","estabelece condições para"]],
   [/\bcom o objetivo de\b/gi,["para","a fim de"]], [/\bdevido ao fato de\b/gi,["porque","em razão de"]],
   [/\bno momento atual\b/gi,["hoje","atualmente"]], [/\buma grande quantidade de\b/gi,["muitos","um número expressivo de"]],
   [/\bconta com\b/gi,["dispõe de","tem"]], [/\bpossibilitando a realização de\b/gi,["o que permite realizar","e viabiliza"]],
@@ -32,6 +44,23 @@ const lower=(text)=>text?text[0].toLocaleLowerCase("pt-BR")+text.slice(1):text;
 const preserveCase=(source,value)=>source[0]===source[0]?.toUpperCase()?upper(value):value;
 const lexicalRewrite=(text,seed)=>alternatives.reduce((value,[pattern,choices],index)=>value.replace(pattern,(match)=>preserveCase(match,choices[(seed+index)%choices.length])),text);
 const normalize=(text)=>text.replace(/[ \t]+/g," ").replace(/\s+([,.;:!?])/g,"$1").replace(/([.!?])(?=[A-ZÀ-Ú])/g,"$1 ").replace(/,\s*,/g,",").replace(/\b(Também|Assim|Hoje),\s+/g,"$1 ").trim();
+const agreementWarnings=[
+  /\b(diversos|muitos|alguns|outros|esses|estes)\s+(pessoas|ideias|situações|ferramentas|estratégias|atividades)\b/i,
+  /\bde (modo|jeito) \w+(a|as)\b/i,
+  /\bde forma \w+(o|os)\b/i,
+  /\b(a|uma|da|na|pela)\s+(projeto|método|propósito|processo|resultado)\b/i,
+  /\b(o|um|do|no|pelo)\s+(atividade|proposta|prática|estratégia|ferramenta)\b/i,
+  /\b(favorecer|contribuir|possibilitar)\s+para\s+para\b/i,
+  /\b(assim|portanto|com isso)\s+(buscar|pretender|realizar|desenvolver)\b/i,
+];
+const hasAgreementWarning=(text)=>agreementWarnings.some((pattern)=>pattern.test(text));
+const contentWords=(text)=>new Set((text.toLocaleLowerCase("pt-BR").match(/[\p{L}]{4,}/gu)||[]));
+const changeRatio=(source,result)=>{
+  const before=contentWords(source);const after=contentWords(result);
+  if(!before.size)return 1;
+  let retained=0;before.forEach((word)=>{if(after.has(word))retained+=1;});
+  return 1-(retained/before.size);
+};
 const structuralRewrite=(sentence,seed)=>{
   let value=sentence;value=value.replace(/^E viabiliza /i,"Isso viabiliza ");
   value=value.replace(/^(A|O) (.+?) será (aplicada|aplicado|implementada|implementado) em (uma|um) (.+?) que (.+?)([.!?])$/i,(_,article,subject,verb,placeArticle,place,detail,end)=>`${upper(placeArticle)} ${place} que ${detail} receberá ${lower(article)} ${lower(subject)}${end}`);
@@ -58,13 +87,23 @@ const fixAgreement=(text)=>fixDeterminers(text)
   .replace(/\bmétodos (matemáticas|pedagógicas|didáticas|inclusivas)\b/gi,(_,adj)=>`métodos ${adj.replace(/as$/i,"os")}`)
   .replace(/\bferramentas (digitais )?(complexos|sofisticados|avançados)\b/gi,(_,middle="",adj)=>`ferramentas ${middle}${adj.replace(/os$/i,"as")}`)
   .replace(/\bprojeto (didática|pedagógica|educacional)\b/gi,(_,adj)=>`projeto ${adj.replace(/a$/i,"o")}`)
-  .replace(/\bestratégias (pedagógicos|didáticos|inclusivos)\b/gi,(_,adj)=>`estratégias ${adj.replace(/os$/i,"as")}`);
+  .replace(/\bestratégias (pedagógicos|didáticos|inclusivos)\b/gi,(_,adj)=>`estratégias ${adj.replace(/os$/i,"as")}`)
+  .replace(/\bde (modo|jeito) (respeitosa|clara|equilibrada|adequada|construtiva|positiva|direta)\b/gi,(_,form,adj)=>`de ${form} ${adj.replace(/a$/i,"o")}`)
+  .replace(/\bde forma (respeitoso|claro|equilibrado|adequado|construtivo|positivo|direto)\b/gi,(_,adj)=>`de forma ${adj.replace(/o$/i,"a")}`);
 const adaptRegister=(sentence,style,audience)=>{let value=sentence;value=value.replace(/^E viabiliza /i,"Isso viabiliza ");if(style==="Objetivo")value=value.replace(fillers,"");if(style==="Natural"||style==="Conversacional"||audience==="Público geral")simpleWords.forEach(([p,r])=>value=value.replace(p,r));if(style==="Formal"||style==="Acadêmico")value=value.replace(/\ba gente\b/gi,"nós").replace(/\btem que\b/gi,"deve").replace(/\bpra\b/gi,"para");if(audience==="Ensino Fundamental")simpleWords.forEach(([p,r])=>value=value.replace(p,r));if(audience==="Cliente")value=value.replace(/\bo usuário\b/gi,"você");return value;};
 export function localRewrite(text,{style="Natural",audience="Público geral",variation=0}={}){
   const source=normalize(text);const seed=hash(source,variation);const paragraphs=source.split(/\n\s*\n/).filter(Boolean);
-  const rewritten=paragraphs.map((paragraph,p)=>tokenize(paragraph).sentences.flatMap(splitLong).map((sentence,i)=>{
-    const contextual=structuralRewrite(adaptRegister(lexicalRewrite(sentence,seed+p+i),style,audience),seed+p+i);
-    return replaceFromGlossary(contextual,seed+p+i);
-  }).join(" ")).join("\n\n");
-  return fixAgreement(normalize(rewritten));
+  const rewritten=paragraphs.map((paragraph,p)=>{
+    const candidate=tokenize(paragraph).sentences.flatMap(splitLong).map((sentence,i)=>{
+      const contextual=structuralRewrite(adaptRegister(lexicalRewrite(sentence,seed+p+i),style,audience),seed+p+i);
+      const rewrittenSentence=fixAgreement(normalize(replaceFromGlossary(contextual,seed+p+i)));
+      return hasAgreementWarning(rewrittenSentence)?fixAgreement(normalize(lexicalRewrite(sentence,seed+p+i))):rewrittenSentence;
+    }).join(" ");
+    const reviewed=fixAgreement(normalize(candidate));
+    if(hasAgreementWarning(reviewed))throw new Error(`A validação encontrou uma possível falha de concordância no parágrafo ${p+1}. Ajuste esse trecho ou solicite uma nova variação.`);
+    return reviewed;
+  }).join("\n\n");
+  const finalText=fixAgreement(normalize(rewritten));
+  if(changeRatio(source,finalText)<0.10)throw new Error("O glossário local não encontrou alterações suficientes para este texto. Tente outro estilo ou divida o conteúdo em trechos menores.");
+  return finalText;
 }

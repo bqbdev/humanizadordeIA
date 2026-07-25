@@ -5,6 +5,7 @@ import { diffWords } from "./utils/diff.js";
 import { exportTxt, exportMarkdown, exportDocx, exportPdf } from "./services/exportService.js";
 import { icon } from "./utils/icons.js";
 
+const MAX_CHARACTERS = 2000;
 const SAMPLE = `Escrever bem não significa usar palavras difíceis. Um bom texto conduz o leitor com clareza, apresenta cada ideia no momento certo e evita repetições que não acrescentam significado.
 
 Com apoio da inteligência artificial, é possível revisar a estrutura, ajustar o tom e encontrar formas mais naturais de dizer a mesma coisa. A tecnologia, porém, deve preservar a intenção de quem escreve — não substituir sua voz.`;
@@ -70,12 +71,12 @@ document.querySelector("#app").innerHTML = `
         <article class="editor-panel original-panel">
           <header class="panel-head">
             <div><span class="dot original-dot"></span><h2>Original</h2></div>
-            <span id="originalCount">0 palavras</span>
+            <span id="originalCount">0 palavras · 0/${MAX_CHARACTERS.toLocaleString("pt-BR")} caracteres</span>
           </header>
-          <textarea id="originalText" aria-label="Texto original" placeholder="Cole ou escreva seu texto aqui...">${state.original}</textarea>
+          <textarea id="originalText" maxlength="${MAX_CHARACTERS}" aria-describedby="liveHint" aria-label="Texto original" placeholder="Cole ou escreva seu texto aqui...">${state.original.slice(0, MAX_CHARACTERS)}</textarea>
           <footer class="panel-foot">
             <button class="text-btn" id="clearBtn">Limpar</button>
-            <span id="liveHint">Análise atualizada em tempo real</span>
+            <span id="liveHint">Limite de ${MAX_CHARACTERS.toLocaleString("pt-BR")} caracteres · análise em tempo real</span>
           </footer>
         </article>
 
@@ -167,6 +168,7 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const originalEl = $("#originalText");
 const resultEl = $("#resultText");
+state.original = originalEl.value;
 let saveTimer;
 let undoStack = [state.original], redoStack = [];
 
@@ -183,7 +185,7 @@ const save = () => {
 
 const updateAnalysis = () => {
   const data = analyze(state.original);
-  $("#originalCount").textContent = `${data.wordCount} palavra${data.wordCount === 1 ? "" : "s"}`;
+  $("#originalCount").textContent = `${data.wordCount} palavra${data.wordCount === 1 ? "" : "s"} · ${state.original.length.toLocaleString("pt-BR")}/${MAX_CHARACTERS.toLocaleString("pt-BR")} caracteres`;
   $("#mWords").textContent = data.wordCount.toLocaleString("pt-BR");
   $("#mSentences").textContent = data.sentenceCount;
   $("#mParagraphs").textContent = data.paragraphCount;
@@ -227,10 +229,19 @@ originalEl.addEventListener("input", () => {
   redoStack = []; updateAnalysis(); scheduleSave();
 });
 
+originalEl.addEventListener("paste", (event) => {
+  const pasted = event.clipboardData?.getData("text") ?? "";
+  const selected = originalEl.selectionEnd - originalEl.selectionStart;
+  if (originalEl.value.length - selected + pasted.length > MAX_CHARACTERS) {
+    toast(`O texto foi limitado a ${MAX_CHARACTERS.toLocaleString("pt-BR")} caracteres para preservar a qualidade da reescrita.`, "error");
+  }
+});
+
 resultEl.addEventListener("input", () => { state.result = resultEl.innerText; updateResult(); scheduleSave(); });
 
 async function runRewrite(isVariation = false) {
   if (!state.original.trim()) return toast("Escreva ou cole um texto primeiro.", "error");
+  if (state.original.length > MAX_CHARACTERS) return toast(`Use no máximo ${MAX_CHARACTERS.toLocaleString("pt-BR")} caracteres por reescrita.`, "error");
   prefs.mode = "local";
   state.variation = isVariation ? state.variation + 1 : 0;
   state.controller?.abort();

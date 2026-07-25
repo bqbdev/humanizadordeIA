@@ -10,6 +10,8 @@ Editor profissional de texto em português, preparado para GitHub Pages. O Clare
 - Métricas de palavras, frases, parágrafos, diversidade lexical, legibilidade e leitura.
 - Alertas para frases/parágrafos longos, repetições, redundâncias, voz passiva e advérbios.
 - Comparação por palavras, com adições e remoções destacadas.
+- Limite de 2.000 caracteres por operação para revisão e validação mais seguras.
+- Processamento por parágrafo, com bloqueio de resultados que apresentem sinais conhecidos de falha de concordância.
 - Exportação para TXT, Markdown, DOCX e PDF, além de cópia.
 - Histórico de 20 versões, auto save e preferências no LocalStorage.
 - Tema claro/escuro, layout responsivo e atalho `Ctrl/Cmd + Enter`.
