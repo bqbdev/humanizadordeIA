@@ -28,8 +28,7 @@ document.querySelector('meta[name="theme-color"]').content = prefs.theme === "da
 document.querySelector("#app").innerHTML = `
   <header class="topbar">
     <a class="brand" href="#" aria-label="Clareia — início">
-      <span class="brand-mark">${icon("sparkle", 20)}</span>
-      <span>clareia</span><em>beta</em>
+      <img class="brand-logo" src="./clareia.png" alt="Clareia" /><em>beta</em>
     </a>
     <nav class="top-actions" aria-label="Ações">
       <span class="save-status"><span></span> Salvo neste dispositivo</span>

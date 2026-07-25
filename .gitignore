@@ -34,3 +34,5 @@ yarn-error.log*
 # arquivos-fonte de imagem na raiz (cópias publicadas ficam em public/)
 /clareia.png.png
 /zerochat.png
+
+/clareia.png
