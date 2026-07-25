@@ -126,3 +126,8 @@ Depois selecione **GitHub Actions** como fonte em **Settings → Pages**. O `bas
 ## Licença
 
 Uso privado ou comercial conforme as necessidades do proprietário do projeto.
+
+
+## Modelo no navegador
+
+A reescrita contextual usa Transformers.js e Qwen2.5-0.5B-Instruct. Em navegadores com WebGPU, a aplicação prioriza a variante q4f16 (aproximadamente 483 MB). Não é necessária chave de API. O desempenho depende do equipamento e o primeiro processamento é mais demorado devido ao download do modelo.

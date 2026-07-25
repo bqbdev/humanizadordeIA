@@ -1,6 +1,5 @@
-import { localRewrite } from "../engines/localRewriter.js";
-
 export async function rewriteText(text, options) {
-  await new Promise((resolve) => setTimeout(resolve, 280));
-  return localRewrite(text, options);
+  if (options?.signal?.aborted) throw new DOMException("Operação cancelada", "AbortError");
+  const { transformersRewrite } = await import("../engines/transformersRewriter.js");
+  return transformersRewrite(text, options);
 }

@@ -100,7 +100,7 @@ document.querySelector("#app").innerHTML = `
       </div>
 
       <div class="primary-row">
-        <div class="privacy-note"><span>${icon("key", 15)}</span><span id="providerLabel">Motor local · nenhuma chave · seu texto não sai do navegador</span></div>
+        <div class="privacy-note"><span>${icon("key", 15)}</span><span id="providerLabel">Modelo contextual no navegador · nenhuma chave de API</span></div>
         <button class="primary-btn" id="rewriteBtn">${icon("sparkle", 18)} <span>Reescrever texto</span> ${icon("arrow", 18)}</button>
       </div>
     </section>
@@ -250,7 +250,7 @@ async function runRewrite(isVariation = false) {
   button.disabled = true; button.classList.add("loading"); button.querySelector("span").textContent = "Aprimorando";
   resultEl.classList.remove("empty"); resultEl.innerHTML = `<div class="result-skeleton"><i></i><i></i><i></i><i></i><i></i></div>`;
   try {
-    const result = await rewriteText(state.original, { ...state, ...prefs }, state.controller.signal);
+    const result = await rewriteText(state.original, { ...state, ...prefs, signal: state.controller.signal, onProgress: (label) => { button.querySelector("span").textContent = label; } });
     state.result = result;
     resultEl.textContent = result;
     state.history = storage.pushHistory({ id: crypto.randomUUID(), date: new Date().toISOString(), original: state.original, result, style: state.style });
