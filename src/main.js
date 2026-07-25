@@ -61,16 +61,6 @@ document.querySelector("#app").innerHTML = `
           <label for="audienceSelect">Para quem</label>
           <select id="audienceSelect">${["Público geral","Ensino Fundamental","Ensino Médio","Faculdade","Profissional","Cliente","WhatsApp","Redes sociais"].map(v => `<option ${v === state.audience ? "selected" : ""}>${v}</option>`).join("")}</select>
         </div>
-        <div class="field size-field">
-          <label>Tamanho</label>
-          <div class="segmented" role="group" aria-label="Tamanho do resultado">
-            <button data-size="reduce">Reduzir</button><button data-size="keep">Manter</button><button data-size="expand">Expandir</button><button data-size="target">Meta</button>
-          </div>
-        </div>
-        <div class="field target-field ${state.size === "target" ? "visible" : ""}">
-          <label for="targetWords">Palavras</label>
-          <input id="targetWords" type="number" min="30" max="5000" value="${state.targetWords}" />
-        </div>
         <div class="toolbar-spacer"></div>
         <div class="undo-actions">
           <button class="icon-btn" id="undoBtn" title="Desfazer (Ctrl+Z)">${icon("undo")}</button>
@@ -117,7 +107,7 @@ document.querySelector("#app").innerHTML = `
 
       <div class="primary-row">
         <div class="privacy-note"><span>${icon("key", 15)}</span><span id="providerLabel">Motor local · nenhuma chave · seu texto não sai do navegador</span></div>
-        <button class="primary-btn" id="rewriteBtn">${icon("sparkle", 18)} <span>Aprimorar texto</span> ${icon("arrow", 18)}</button>
+        <button class="primary-btn" id="rewriteBtn">${icon("sparkle", 18)} <span>Reescrever texto</span> ${icon("arrow", 18)}</button>
       </div>
     </section>
 
@@ -180,7 +170,7 @@ const toast = (message, type = "success") => {
 };
 
 const save = () => {
-  storage.saveDocument({ original: state.original, result: state.result, style: state.style, audience: state.audience, size: state.size, targetWords: state.targetWords });
+  storage.saveDocument({ original: state.original, result: state.result, style: state.style, audience: state.audience });
   $(".save-status").classList.add("saved");
   setTimeout(() => $(".save-status").classList.remove("saved"), 800);
 };
@@ -254,7 +244,7 @@ async function runRewrite(isVariation = false) {
     updateResult();
     if (error.name !== "AbortError") toast(error.message, "error");
   } finally {
-    button.disabled = false; button.classList.remove("loading"); button.querySelector("span").textContent = "Aprimorar texto";
+    button.disabled = false; button.classList.remove("loading"); button.querySelector("span").textContent = "Reescrever texto";
   }
 }
 
@@ -268,16 +258,8 @@ function renderHistory() {
   $("#historyList").innerHTML = state.history.length ? state.history.map(v => `<button class="history-item" data-id="${v.id}"><span>${new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(v.date))}</span><strong>${v.result.slice(0, 72)}${v.result.length > 72 ? "…" : ""}</strong><small>${v.style} · ${v.audience}</small></button>`).join("") : `<div class="history-empty">${icon("history", 28)}<p>Nenhuma versão criada ainda.</p></div>`;
 }
 
-$$("[data-size]").forEach(btn => {
-  btn.classList.toggle("active", btn.dataset.size === state.size);
-  btn.addEventListener("click", () => {
-    state.size = btn.dataset.size; $$("[data-size]").forEach(b => b.classList.toggle("active", b === btn));
-    $(".target-field").classList.toggle("visible", state.size === "target"); scheduleSave();
-  });
-});
 $("#styleSelect").addEventListener("change", e => { state.style = e.target.value; scheduleSave(); });
 $("#audienceSelect").addEventListener("change", e => { state.audience = e.target.value; scheduleSave(); });
-$("#targetWords").addEventListener("input", e => { state.targetWords = Math.max(30, Number(e.target.value)); scheduleSave(); });
 $("#rewriteBtn").addEventListener("click", () => runRewrite());
 $("#variationBtn").addEventListener("click", () => runRewrite(true));
 $("#clearBtn").addEventListener("click", () => { state.original = ""; originalEl.value = ""; updateAnalysis(); scheduleSave(); originalEl.focus(); });

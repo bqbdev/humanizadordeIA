@@ -5,6 +5,8 @@ const swaps = [
   [/\bno momento atual\b/gi, "atualmente"], [/\buma grande quantidade de\b/gi, "muitos"],
   [/\bna minha opinião pessoal\b/gi, "na minha opinião"], [/\bplanejar antecipadamente\b/gi, "planejar"],
   [/\bcontinua a permanecer\b/gi, "permanece"], [/\bmas porém\b/gi, "porém"],
+  [/\bconta com\b/gi, "dispõe de"], [/\bpossibilitando a realização de\b/gi, "o que permite realizar"],
+  [/\bsem a necessidade de\b/gi, "sem exigir"],
 ];
 const connectors = [[/\balém disso\b/gi,"Também"],[/\bportanto\b/gi,"Por isso"],[/\bcontudo\b/gi,"Ainda assim"],[/\bdessa forma\b/gi,"Assim"]];
 const fillers = /\b(basicamente|realmente|literalmente|certamente|obviamente|simplesmente|essencialmente)\b[,]?\s*/gi;
@@ -28,12 +30,8 @@ const adapt = (sentence, style, audience, index, variation) => {
   if(variation>0){const pair=connectors[(index+variation)%connectors.length];value=value.replace(pair[0],pair[1]);}
   return value;
 };
-export function localRewrite(text,{size="keep",targetWords=0,style="Natural",audience="Público geral",variation=0}={}){
+export function localRewrite(text,{style="Natural",audience="Público geral",variation=0}={}){
   const source=clean(text); let paragraphs=source.split(/\n\s*\n/).filter(Boolean);
   let result=paragraphs.map((paragraph,p)=>tokenize(paragraph).sentences.flatMap(splitLong).map((s,i)=>adapt(s,style,audience,i+p,variation)).join(" ")).join("\n\n");
-  if(size==="reduce") result=result.replace(fillers,"").replace(/\b(na verdade|de fato|de certa forma|em outras palavras)[,]?\s*/gi,"");
-  const goal=size==="target"?Math.max(30,targetWords):0;
-  if(goal&&tokenize(result).words.length>goal){result=result.split(/\s+/).slice(0,goal).join(" ").replace(/[,;:]?$/,".");}
-  if(size==="expand"&&result) result += "\n\nEsse encadeamento ajuda a relacionar as ideias e torna a leitura mais natural, sem alterar as informações apresentadas.";
   return clean(result);
 }

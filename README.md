@@ -4,8 +4,8 @@ Editor profissional de texto em português, preparado para GitHub Pages. O Clare
 
 ## Recursos
 
-- Reescrita, expansão, compressão e adaptação de público/estilo.
-- Meta personalizada de palavras e geração de novas variações.
+- Reescrita completa e adaptação de público/estilo, sem acrescentar ideias.
+- Geração de novas variações preservando as informações originais.
 - Parser e tokenizer próprios, sem enviar dados para análise.
 - Métricas de palavras, frases, parágrafos, diversidade lexical, legibilidade e leitura.
 - Alertas para frases/parágrafos longos, repetições, redundâncias, voz passiva e advérbios.
