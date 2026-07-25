@@ -1,4 +1,5 @@
 import { tokenize } from "./tokenizer.js";
+import { replaceFromGlossary } from "../assets/glossaryPtBr.js";
 
 const alternatives = [
   [/\bcom o objetivo de\b/gi,["para","a fim de"]], [/\bdevido ao fato de\b/gi,["porque","em razão de"]],
@@ -31,6 +32,9 @@ const splitLong=(sentence)=>{if(tokenize(sentence).words.length<27)return[senten
 const adaptRegister=(sentence,style,audience)=>{let value=sentence;value=value.replace(/^E viabiliza /i,"Isso viabiliza ");if(style==="Objetivo")value=value.replace(fillers,"");if(style==="Natural"||style==="Conversacional"||audience==="Público geral")simpleWords.forEach(([p,r])=>value=value.replace(p,r));if(style==="Formal"||style==="Acadêmico")value=value.replace(/\ba gente\b/gi,"nós").replace(/\btem que\b/gi,"deve").replace(/\bpra\b/gi,"para");if(audience==="Ensino Fundamental")simpleWords.forEach(([p,r])=>value=value.replace(p,r));if(audience==="Cliente")value=value.replace(/\bo usuário\b/gi,"você");return value;};
 export function localRewrite(text,{style="Natural",audience="Público geral",variation=0}={}){
   const source=normalize(text);const seed=hash(source,variation);const paragraphs=source.split(/\n\s*\n/).filter(Boolean);
-  const rewritten=paragraphs.map((paragraph,p)=>tokenize(paragraph).sentences.flatMap(splitLong).map((sentence,i)=>structuralRewrite(adaptRegister(lexicalRewrite(sentence,seed+p+i),style,audience),seed+p+i)).join(" ")).join("\n\n");
+  const rewritten=paragraphs.map((paragraph,p)=>tokenize(paragraph).sentences.flatMap(splitLong).map((sentence,i)=>{
+    const contextual=structuralRewrite(adaptRegister(lexicalRewrite(sentence,seed+p+i),style,audience),seed+p+i);
+    return replaceFromGlossary(contextual,seed+p+i);
+  }).join(" ")).join("\n\n");
   return normalize(rewritten);
 }
