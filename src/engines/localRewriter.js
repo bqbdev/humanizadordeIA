@@ -28,7 +28,13 @@ const structuralRewrite=(sentence,seed)=>{
   if(seed%3===0)value=value.replace(/^Para (.+?), (.+?)([.!?])$/i,(_,goal,action,end)=>`${upper(action)} para ${lower(goal)}${end}`);
   return value;
 };
-const splitLong=(sentence)=>{if(tokenize(sentence).words.length<27)return[sentence];const points=[...sentence.matchAll(/[,;:]\s+/g)].filter(m=>m.index>sentence.length*.3&&m.index<sentence.length*.72);if(!points.length)return[sentence];const point=points.sort((a,b)=>Math.abs(a.index-sentence.length/2)-Math.abs(b.index-sentence.length/2))[0];const first=sentence.slice(0,point.index).trim();const rest=sentence.slice(point.index+point[0].length).trim();return[`${first}.`,`${upper(rest)}`];};
+const splitLong=(sentence)=>[sentence];
+const fixAgreement=(text)=>text
+  .replace(/\b(a|uma) projeto\b/gi,(match,article)=>article.toLowerCase()==="uma"?"um projeto":"o projeto")
+  .replace(/\bmétodos (matemáticas|pedagógicas|didáticas|inclusivas)\b/gi,(_,adj)=>`métodos ${adj.replace(/as$/i,"os")}`)
+  .replace(/\bferramentas (digitais )?(complexos|sofisticados|avançados)\b/gi,(_,middle="",adj)=>`ferramentas ${middle}${adj.replace(/os$/i,"as")}`)
+  .replace(/\bprojeto (didática|pedagógica|educacional)\b/gi,(_,adj)=>`projeto ${adj.replace(/a$/i,"o")}`)
+  .replace(/\bestratégias (pedagógicos|didáticos|inclusivos)\b/gi,(_,adj)=>`estratégias ${adj.replace(/os$/i,"as")}`);
 const adaptRegister=(sentence,style,audience)=>{let value=sentence;value=value.replace(/^E viabiliza /i,"Isso viabiliza ");if(style==="Objetivo")value=value.replace(fillers,"");if(style==="Natural"||style==="Conversacional"||audience==="Público geral")simpleWords.forEach(([p,r])=>value=value.replace(p,r));if(style==="Formal"||style==="Acadêmico")value=value.replace(/\ba gente\b/gi,"nós").replace(/\btem que\b/gi,"deve").replace(/\bpra\b/gi,"para");if(audience==="Ensino Fundamental")simpleWords.forEach(([p,r])=>value=value.replace(p,r));if(audience==="Cliente")value=value.replace(/\bo usuário\b/gi,"você");return value;};
 export function localRewrite(text,{style="Natural",audience="Público geral",variation=0}={}){
   const source=normalize(text);const seed=hash(source,variation);const paragraphs=source.split(/\n\s*\n/).filter(Boolean);
@@ -36,5 +42,5 @@ export function localRewrite(text,{style="Natural",audience="Público geral",var
     const contextual=structuralRewrite(adaptRegister(lexicalRewrite(sentence,seed+p+i),style,audience),seed+p+i);
     return replaceFromGlossary(contextual,seed+p+i);
   }).join(" ")).join("\n\n");
-  return normalize(rewritten);
+  return fixAgreement(normalize(rewritten));
 }

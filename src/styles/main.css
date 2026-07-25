@@ -17,7 +17,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .icon { display: block; }
 .topbar { height: 66px; padding: 0 clamp(18px, 4vw, 64px); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(16px); }
 .brand { color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 19px; letter-spacing: -.4px; }
-.brand-mark { width: 31px; height: 31px; display: grid; place-items: center; background: var(--brand); color: var(--surface); border-radius: 9px; }
+.brand-logo { width: 142px; height: 38px; object-fit: contain; object-position: left center; }
 .brand em { font-style: normal; font-size: 9px; color: var(--brand); background: var(--brand-soft); padding: 3px 5px; border-radius: 4px; text-transform: uppercase; letter-spacing: .8px; margin-left: -4px; }
 .top-actions { display: flex; align-items: center; gap: 6px; }
 .icon-btn { display: inline-grid; place-items: center; width: 36px; height: 36px; border: 0; background: transparent; color: var(--muted); border-radius: 9px; transition: .18s; }
@@ -99,6 +99,13 @@ textarea, .result-text { resize: none; flex: 1; width: 100%; min-height: 310px; 
 .issue > div { display: grid; gap: 2px; }
 .issue strong { color: var(--text); font-size: 10px; }.issue small { color: var(--muted); font-size: 9px; }
 .empty-issue { color: var(--brand); background: var(--brand-soft); border-color: transparent; }
+.proof-section { margin-top: 64px; padding: 26px; display: grid; grid-template-columns: 1.25fr .75fr; gap: 30px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+.proof-copy h2 { margin: 0 0 12px; font: 600 29px/1.1 "Newsreader", serif; }
+.proof-copy > p:not(.eyebrow) { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.65; }
+.proof-copy small { color: var(--muted); font-size: 9px; line-height: 1.5; display: block; max-width: 600px; }
+.proof-card { margin: 0; padding: 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; text-align: center; }
+.proof-card img { display: block; width: 100%; max-height: 220px; object-fit: contain; border-radius: 7px; background: #fff; }
+.proof-card figcaption { margin-top: 8px; color: var(--muted); font-size: 8px; }
 .comparison.hidden { display: none; }
 .legend { display: flex; gap: 15px; font-size: 10px; color: var(--muted); }
 .legend span { display: flex; align-items: center; gap: 6px; }.legend i { width: 9px; height: 9px; border-radius: 2px; }
@@ -134,6 +141,9 @@ textarea, .result-text { resize: none; flex: 1; width: 100%; min-height: 310px; 
   .toolbar { flex-wrap: wrap; }.toolbar-spacer { display: none; }.undo-actions { margin-left: auto; }.intro { padding-top: 45px; }
 }
 @media (max-width: 680px) {
+  .brand-logo { width: 112px; height: 34px; }
+  .proof-section { margin-top: 46px; padding: 20px; grid-template-columns: 1fr; }
+  .proof-copy h2 { font-size: 25px; }
   main { width: min(100% - 22px, 1180px); }.topbar { padding: 0 12px; }.save-status, .shortcut-hint { display: none; }
   .intro { padding: 34px 3px 22px; }.intro > div > p:last-child { line-height: 1.55; } h1 { font-size: 39px; }
   .toolbar { align-items: end; padding: 12px; }.field { flex: 1; }.field select { width: 100%; min-width: 0; }.size-field { flex-basis: 100%; }.segmented button { flex: 1; padding: 0 6px; }.target-field { flex: 0; }

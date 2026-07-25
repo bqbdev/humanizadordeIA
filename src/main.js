@@ -124,6 +124,19 @@ document.querySelector("#app").innerHTML = `
       </div>
     </section>
 
+
+    <section class="proof-section" aria-labelledby="proofTitle">
+      <div class="proof-copy">
+        <p class="eyebrow">Variação linguística local</p>
+        <h2 id="proofTitle">Uma reescrita visivelmente diferente</h2>
+        <p>O Clareia combina glossário PT-BR, substituições contextuais e reorganização de períodos para reduzir repetições e alterar a construção do texto sem adicionar fatos.</p>
+        <small>Resultados de classificadores externos podem variar conforme o texto, o detector e suas atualizações. Nenhuma classificação específica é garantida.</small>
+      </div>
+      <figure class="proof-card">
+        <img src="./zerochat.png" alt="Exemplo de teste externo informado pelo autor do projeto" />
+        <figcaption>Exemplo de teste externo — resultado ilustrativo, não uma garantia.</figcaption>
+      </figure>
+    </section>
     <section class="comparison ${state.result ? "" : "hidden"}" id="comparison">
       <div class="section-title"><div><p class="eyebrow">Comparação inteligente</p><h2>Veja exatamente o que mudou</h2></div><div class="legend"><span><i class="removed"></i> removido</span><span><i class="added"></i> adicionado</span></div></div>
       <div class="diff-view" id="diffView"></div>
