@@ -10,7 +10,19 @@ const alternatives = [
   [/\bdessa forma\b/gi,["Assim","Com isso"]], [/\bpor meio de\b/gi,["com","a partir de"]],
   [/\bno que diz respeito a\b/gi,["quanto a","sobre"]], [/\btem como finalidade\b/gi,["busca","serve para"]],
   [/\bfazer uso de\b/gi,["usar","recorrer a"]], [/\blevar em consideração\b/gi,["considerar","ter em conta"]],
-  [/\bé possível observar que\b/gi,["nota-se que","percebe-se que"]], [/\bé importante destacar que\b/gi,["vale observar que",""]],
+  [/\bé possível observar que\b/gi,["nota-se que","percebe-se que"]], [/\bé importante destacar que\b/gi,["vale notar que","convém observar que"]],
+  [/\bserá desenvolvida\b/gi,["será realizada","será conduzida"]], [/\bserá desenvolvido\b/gi,["será realizado","será conduzido"]],
+  [/\bfoi desenvolvida\b/gi,["foi realizada","foi conduzida"]], [/\bfoi desenvolvido\b/gi,["foi realizado","foi conduzido"]],
+  [/\bé composta por\b/gi,["reúne","é constituída por"]], [/\bé composto por\b/gi,["reúne","é constituído por"]],
+  [/\bsão compostas por\b/gi,["reúnem","são constituídas por"]], [/\bsão compostos por\b/gi,["reúnem","são constituídos por"]],
+  [/\bde acordo com\b/gi,["conforme","em conformidade com"]], [/\bem consonância com\b/gi,["em conformidade com","de acordo com"]],
+  [/\bcontribui para\b/gi,["favorece","colabora para"]], [/\bcontribuem para\b/gi,["favorecem","colaboram para"]],
+  [/\bcom a finalidade de\b/gi,["para","a fim de"]], [/\bcom relação a\b/gi,["sobre","quanto a"]],
+  [/\bem relação a\b/gi,["quanto a","no que se refere a"]], [/\bao longo de\b/gi,["durante","no decorrer de"]],
+  [/\ba partir de\b/gi,["com base em","por meio de"]], [/\bde maneira\b/gi,["de modo","de forma"]],
+  [/\bde forma\b/gi,["de modo","de maneira"]], [/\bcada vez mais\b/gi,["progressivamente","com frequência crescente"]],
+  [/\btendo em vista\b/gi,["considerando","diante de"]], [/\bvale ressaltar que\b/gi,["convém destacar que","é relevante observar que"]],
+  [/\breforça a importância de\b/gi,["evidencia a relevância de","destaca o valor de"]],
 ];
 const simpleWords = [[/\butilizar\b/gi,"usar"],[/\bnecessita\b/gi,"precisa"],[/\bpossui\b/gi,"tem"],[/\bposteriormente\b/gi,"depois"],[/\bpreviamente\b/gi,"antes"]];
 const fillers=/\b(basicamente|realmente|literalmente|certamente|obviamente|simplesmente|essencialmente)\b[,]?\s*/gi;
@@ -19,7 +31,7 @@ const upper=(text)=>text?text[0].toLocaleUpperCase("pt-BR")+text.slice(1):text;
 const lower=(text)=>text?text[0].toLocaleLowerCase("pt-BR")+text.slice(1):text;
 const preserveCase=(source,value)=>source[0]===source[0]?.toUpperCase()?upper(value):value;
 const lexicalRewrite=(text,seed)=>alternatives.reduce((value,[pattern,choices],index)=>value.replace(pattern,(match)=>preserveCase(match,choices[(seed+index)%choices.length])),text);
-const normalize=(text)=>text.replace(/[ \t]+/g," ").replace(/\s+([,.;:!?])/g,"$1").replace(/([.!?])(?=[A-ZÀ-Ú])/g,"$1 ").replace(/,\s*,/g,",").trim();
+const normalize=(text)=>text.replace(/[ \t]+/g," ").replace(/\s+([,.;:!?])/g,"$1").replace(/([.!?])(?=[A-ZÀ-Ú])/g,"$1 ").replace(/,\s*,/g,",").replace(/\b(Também|Assim|Hoje),\s+/g,"$1 ").trim();
 const structuralRewrite=(sentence,seed)=>{
   let value=sentence;value=value.replace(/^E viabiliza /i,"Isso viabiliza ");
   value=value.replace(/^(A|O) (.+?) será (aplicada|aplicado|implementada|implementado) em (uma|um) (.+?) que (.+?)([.!?])$/i,(_,article,subject,verb,placeArticle,place,detail,end)=>`${upper(placeArticle)} ${place} que ${detail} receberá ${lower(article)} ${lower(subject)}${end}`);
@@ -29,7 +41,19 @@ const structuralRewrite=(sentence,seed)=>{
   return value;
 };
 const splitLong=(sentence)=>[sentence];
-const fixAgreement=(text)=>text
+const masculineNouns="projeto|método|propósito|intervalo|cenário|ambiente|apoio|suporte|conjunto|meio|estudante|discente";
+const feminineNouns="iniciativa|prática|ação|classe|abordagem|relevância|organização|entidade|exigência|demanda|execução|condução|solução|estrutura|participação|formação";
+const masculineMap={a:"o",uma:"um",da:"do",na:"no",pela:"pelo",desta:"deste",nessa:"nesse",essa:"esse",esta:"este"};
+const feminineMap={o:"a",um:"uma",do:"da",no:"na",pelo:"pela",deste:"desta",nesse:"nessa",esse:"essa",este:"esta"};
+const matchCase=(source,value)=>source[0]===source[0].toUpperCase()?upper(value):value;
+const fixDeterminers=(text)=>text
+  .replace(new RegExp(`\\b(${Object.keys(masculineMap).join("|")}) (${masculineNouns})\\b`,"gi"),(match,det,noun)=>`${matchCase(det,masculineMap[det.toLowerCase()])} ${noun}`)
+  .replace(new RegExp(`\\b(${Object.keys(feminineMap).join("|")}) (${feminineNouns})\\b`,"gi"),(match,det,noun)=>`${matchCase(det,feminineMap[det.toLowerCase()])} ${noun}`);
+const fixAgreement=(text)=>fixDeterminers(text)
+  .replace(/\bda projeto\b/gi,"do projeto")
+  .replace(/\bna projeto\b/gi,"no projeto")
+  .replace(/\bpela projeto\b/gi,"pelo projeto")
+  .replace(/\b(desta|nessa|essa|esta) projeto\b/gi,(match,word)=>`${({desta:"deste",nessa:"nesse",essa:"esse",esta:"este"})[word.toLowerCase()]} projeto`)
   .replace(/\b(a|uma) projeto\b/gi,(match,article)=>article.toLowerCase()==="uma"?"um projeto":"o projeto")
   .replace(/\bmétodos (matemáticas|pedagógicas|didáticas|inclusivas)\b/gi,(_,adj)=>`métodos ${adj.replace(/as$/i,"os")}`)
   .replace(/\bferramentas (digitais )?(complexos|sofisticados|avançados)\b/gi,(_,middle="",adj)=>`ferramentas ${middle}${adj.replace(/os$/i,"as")}`)
