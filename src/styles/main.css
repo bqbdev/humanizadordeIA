@@ -157,4 +157,5 @@ textarea, .result-text { resize: none; flex: 1; width: 100%; min-height: 310px; 
   .insights, .comparison { padding-top: 46px; }.section-title { align-items: start; gap: 12px; }.section-title h2 { font-size: 25px; }.quality-pill { display: none; }
   .metric-grid { grid-template-columns: repeat(2, 1fr); }.metric-grid article { border-bottom: 1px solid var(--line) !important; }.metric-grid article:nth-child(even) { border-right: 0; }.metric-grid article:nth-last-child(-n+2) { border-bottom: 0 !important; }
   #issueList { display: grid; }.issue { align-items: start; }.legend { display: none; }.diff-view { padding: 18px; font-size: 13px; }.drawer { padding: 22px; }
+  .toast { width: calc(100% - 32px); max-width: 420px; bottom: 82px; padding: 13px 15px; font-size: 12px; line-height: 1.45; text-align: center; }
 }

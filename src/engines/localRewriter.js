@@ -76,15 +76,14 @@ const agreementWarnings=[
   /\b(assim|portanto|com isso)\s+(buscar|pretender|realizar|desenvolver)\b/i,
 ];
 const hasAgreementWarning=(text)=>agreementWarnings.some((pattern)=>pattern.test(text));
-const contentWords=(text)=>new Set((text.toLocaleLowerCase("pt-BR").match(/[\p{L}]{4,}/gu)||[]));
-const changeRatio=(source,result)=>{
-  const before=contentWords(source);const after=contentWords(result);
-  if(!before.size)return 1;
-  let retained=0;before.forEach((word)=>{if(after.has(word))retained+=1;});
-  return 1-(retained/before.size);
-};
 const structuralRewrite=(sentence,seed)=>{
   let value=sentence;value=value.replace(/^E viabiliza /i,"Isso viabiliza ");
+  value=value.replace(/^(.+?) merece (.+?), (.+?) e (.+?) em todos os momentos([.!?])$/i,(_,subject,first,second,third,end)=>seed%2===0
+    ? `Em todas as ocasiões, ${lower(subject)} deve receber ${third}, ${second} e ${first}${end}`
+    : `${upper(subject)} precisa ser acolhido com ${first}, ${second} e ${third} continuamente${end}`);
+  value=value.replace(/^Conte com (um|uma) (.+?), (prestado|prestada) com (.+?), (.+?) e (.+?)([.!?])$/i,(_,article,service,participle,first,second,third,end)=>seed%2===0
+    ? `Oferecemos ${lower(article)} ${service} conduzido com ${first}, ${second} e ${third}${end}`
+    : `Você encontra ${lower(article)} ${service} marcado por ${third}, ${second} e ${first}${end}`);
   value=value.replace(/^(A|O) (.+?) será (aplicada|aplicado|implementada|implementado) em (uma|um) (.+?) que (.+?)([.!?])$/i,(_,article,subject,verb,placeArticle,place,detail,end)=>`${upper(placeArticle)} ${place} que ${detail} receberá ${lower(article)} ${lower(subject)}${end}`);
   value=value.replace(/^A instituição (dispõe de|tem) (.+?), composta por (.+?)([.!?])$/i,(_,verb,thing,parts,end)=>`${upper(thing)} da instituição inclui ${parts}${end}`);
   value=value.replace(/^(.+?), possibilitando (.+?)([.!?])$/i,(_,idea,result,end)=>`${idea}. Isso permite ${lower(result)}${end}`);
@@ -127,6 +126,5 @@ export function localRewrite(text,{style="Natural",audience="Público geral",var
     return reviewed;
   }).join("\n\n");
   const finalText=fixAgreement(normalize(rewritten));
-  if(changeRatio(source,finalText)<0.10)throw new Error("O glossário local não encontrou alterações suficientes para este texto. Tente outro estilo ou divida o conteúdo em trechos menores.");
   return finalText;
 }

@@ -255,6 +255,11 @@ async function runRewrite(isVariation = false) {
     resultEl.textContent = result;
     state.history = storage.pushHistory({ id: crypto.randomUUID(), date: new Date().toISOString(), original: state.original, result, style: state.style });
     updateResult(); renderHistory(); save();
+    if (window.matchMedia("(max-width: 680px)").matches) {
+      state.activeTab = "result";
+      $$("[data-tab]").forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === "result"));
+      $(".workspace").dataset.mobileTab = "result";
+    }
     toast(isVariation ? "Nova variação criada instantaneamente." : "Texto reescrito com rapidez.");
   } catch (error) {
     resultEl.textContent = state.result;
