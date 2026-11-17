@@ -65,7 +65,7 @@ const upper=(text)=>text?text[0].toLocaleUpperCase("pt-BR")+text.slice(1):text;
 const lower=(text)=>text?text[0].toLocaleLowerCase("pt-BR")+text.slice(1):text;
 const preserveCase=(source,value)=>source[0]===source[0]?.toUpperCase()?upper(value):value;
 const lexicalRewrite=(text,seed)=>alternatives.reduce((value,[pattern,choices],index)=>value.replace(pattern,(match)=>preserveCase(match,choices[(seed+index)%choices.length])),intensiveAlternatives.reduce((value,[pattern,choices],index)=>value.replace(pattern,(match)=>preserveCase(match,choices[(seed+index)%choices.length])),text));
-const normalize=(text)=>text.replace(/[ \t]+/g," ").replace(/\s+([,.;:!?])/g,"$1").replace(/([.!?])(?=[A-ZÀ-Ú])/g,"$1 ").replace(/,\s*,/g,",").replace(/\bAssim,?\s+/g,"Assim, ").trim();
+const normalize=(text)=>text.replace(/[ \t]+/g," ").replace(/\s+([,.;:!?])/g,"$1").replace(/([.!?])(?=[A-ZÀ-Ú])/g,"$1 ").replace(/,\s*,/g,",").replace(/^(Também|Somado a isso),\s+/gi,"$1 ").replace(/\bAssim,?\s+/g,"Assim, ").trim();
 const agreementWarnings=[
   /\b(diversos|muitos|alguns|outros|esses|estes)\s+(pessoas|ideias|situações|ferramentas|estratégias|atividades)\b/i,
   /\bde (modo|jeito) \w+(a|as)\b/i,

@@ -251,6 +251,7 @@ async function runRewrite(isVariation = false) {
   resultEl.classList.remove("empty"); resultEl.innerHTML = `<div class="result-skeleton"><i></i><i></i><i></i><i></i><i></i></div>`;
   try {
     const result = await rewriteText(state.original, { ...state, ...prefs, signal: state.controller.signal });
+    if (!result?.trim()) throw new Error("Não foi possível gerar o texto. Tente novamente.");
     state.result = result;
     resultEl.textContent = result;
     state.history = storage.pushHistory({ id: crypto.randomUUID(), date: new Date().toISOString(), original: state.original, result, style: state.style });
