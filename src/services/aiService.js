@@ -1,4 +1,4 @@
-import { localRewrite } from "../engines/localRewriter.js";
+import { contextualLocalRewrite } from "../engines/contextualLocalRewriter.js";
 
 const normalizeFallback = (text = "") => text
   .replace(/\r\n?/g, "\n")
@@ -29,7 +29,7 @@ export async function rewriteText(text, options = {}) {
   if (options.signal?.aborted) throw new DOMException("Operação cancelada", "AbortError");
   await new Promise((resolve) => setTimeout(resolve, 40));
   try {
-    const result = localRewrite(text, options);
+    const result = contextualLocalRewrite(text, options);
     if (typeof result !== "string" || !result.trim()) throw new Error("Resultado vazio");
     if (result.trim() === text.trim() || changedWordRatio(text, result) < 0.08) {
       const recovered = fallbackRewrite(result, options.variation);
@@ -40,7 +40,7 @@ export async function rewriteText(text, options = {}) {
   } catch (error) {
     console.warn("O motor principal usou a recuperação segura.", error);
     try {
-      const retry = localRewrite(text, { ...options, variation: (options.variation ?? 0) + 1 });
+      const retry = contextualLocalRewrite(text, { ...options, variation: (options.variation ?? 0) + 1 });
       if (retry.trim() !== text.trim() && changedWordRatio(text, retry) >= 0.08) return retry;
     } catch (retryError) {
       console.warn("A segunda construção também precisou de recuperação.", retryError);
