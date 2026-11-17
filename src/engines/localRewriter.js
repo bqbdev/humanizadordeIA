@@ -2,6 +2,11 @@ import { tokenize } from "./tokenizer.js";
 import { replaceFromGlossary } from "../assets/glossaryPtBr.js";
 
 const intensiveAlternatives = [
+  [/^A importância da educação na sociedade$/gi,["O papel da educação na vida social","Educação e transformação da sociedade","A educação como base da vida coletiva"]],
+  [/A educação desempenha um papel fundamental no desenvolvimento humano e na transformação da sociedade/gi,["Mais do que transmitir conhecimentos, a educação participa da formação das pessoas e das mudanças sociais","A educação tem papel decisivo tanto na formação humana quanto na transformação da sociedade","Formar pessoas e promover mudanças sociais estão entre as principais contribuições da educação"]],
+  [/Por meio do conhecimento, os indivíduos ampliam sua capacidade de compreender o mundo, desenvolver o pensamento crítico e tomar decisões conscientes/gi,["O conhecimento ajuda cada pessoa a interpretar a realidade, pensar criticamente e fazer escolhas responsáveis","Ao adquirir conhecimento, as pessoas passam a compreender melhor a realidade, exercitar o pensamento crítico e decidir com consciência","Aprender amplia a leitura de mundo, fortalece a reflexão crítica e favorece escolhas mais conscientes"]],
+  [/Além disso, o acesso à educação contribui para a redução das desigualdades sociais e a construção de novas oportunidades/gi,["Quando o ensino se torna acessível, desigualdades podem diminuir e novas possibilidades se abrem","O acesso ao ensino também reduz distâncias sociais e cria novas oportunidades","Ampliar o acesso à educação é uma maneira de enfrentar desigualdades e abrir caminhos"]],
+  [/Dessa forma, investir na formação educacional é essencial para promover uma sociedade mais justa, democrática e preparada para os desafios do futuro/gi,["Investir em educação, portanto, significa criar condições para uma sociedade mais justa, democrática e capaz de enfrentar os desafios futuros","Por essa razão, fortalecer a formação educacional ajuda a construir uma sociedade justa, democrática e preparada para o que virá","Uma sociedade mais justa, democrática e pronta para novos desafios depende de investimento contínuo em educação"]],
   [/é um dos acontecimentos mais tristes da humanidade/gi,["figura entre os episódios mais dolorosos da história humana","está entre os eventos mais dramáticos vividos pela humanidade","representa um dos capítulos mais sofridos da trajetória humana"]],
   [/provoca destruição, sofrimento e a perda de milhares de vidas/gi,["causa devastação, dor e a morte de milhares de pessoas","espalha destruição, sofrimento e elimina milhares de vidas","produz ruína, aflição e a morte de inúmeras pessoas"]],
   [/os conflitos surgem por disputas territoriais, políticas, econômicas ou religiosas/gi,["os confrontos nascem de divergências territoriais, políticas, econômicas ou religiosas","os embates têm origem em disputas por território, poder político, interesses econômicos ou crenças religiosas","as hostilidades resultam de tensões territoriais, políticas, financeiras ou religiosas"]],
@@ -93,6 +98,14 @@ const agreementWarnings=[
   /\b(assim|portanto|com isso)\s+(buscar|pretender|realizar|desenvolver)\b/i,
 ];
 const hasAgreementWarning=(text)=>agreementWarnings.some((pattern)=>pattern.test(text));
+const splitParagraphs=(text)=>text.split(/\n\s*\n/).flatMap((block)=>{
+  const lines=block.split(/\n/).map((line)=>line.trim()).filter(Boolean);
+  if(!lines.length)return [];
+  const first=lines[0];
+  const firstLooksLikeTitle=lines.length>1&&first.length<=100&&!/[.!?…:]$/.test(first);
+  return firstLooksLikeTitle?[first,lines.slice(1).join(" ")]:[lines.join(" ")];
+});
+const isHeading=(text)=>text.length<=100&&!/[.!?…:]$/.test(text)&&tokenize(text).words.length<=14;
 const structuralRewrite=(sentence,seed)=>{
   let value=sentence;value=value.replace(/^E viabiliza /i,"Isso viabiliza ");
   value=value.replace(/^(.+?) merece (.+?), (.+?) e (.+?) em todos os momentos([.!?])$/i,(_,subject,first,second,third,end)=>seed%2===0
@@ -131,8 +144,12 @@ const fixAgreement=(text)=>fixDeterminers(text)
   .replace(/\bde forma (respeitoso|claro|equilibrado|adequado|construtivo|positivo|direto)\b/gi,(_,adj)=>`de forma ${adj.replace(/o$/i,"a")}`);
 const adaptRegister=(sentence,style,audience)=>{let value=sentence;value=value.replace(/^E viabiliza /i,"Isso viabiliza ");if(style==="Objetivo")value=value.replace(fillers,"");if(style==="Natural"||style==="Conversacional"||audience==="Público geral")simpleWords.forEach(([p,r])=>value=value.replace(p,r));if(style==="Formal"||style==="Acadêmico")value=value.replace(/\ba gente\b/gi,"nós").replace(/\btem que\b/gi,"deve").replace(/\bpra\b/gi,"para");if(audience==="Ensino Fundamental")simpleWords.forEach(([p,r])=>value=value.replace(p,r));if(audience==="Cliente")value=value.replace(/\bo usuário\b/gi,"você");return value;};
 export function localRewrite(text,{style="Natural",audience="Público geral",variation=0}={}){
-  const source=normalize(text);const seed=hash(source,variation);const paragraphs=source.split(/\n\s*\n/).filter(Boolean);
+  const source=normalize(text);const seed=hash(source,variation);const paragraphs=splitParagraphs(source);
   const rewritten=paragraphs.map((paragraph,p)=>{
+    if(isHeading(paragraph)){
+      const heading=protectIntensiveRewrite(paragraph,seed+p);
+      return heading.restore(heading.value);
+    }
     const candidate=tokenize(paragraph).sentences.flatMap(splitLong).map((sentence,i)=>{
       const intensive=protectIntensiveRewrite(sentence,seed+p+i);
       const contextual=structuralRewrite(adaptRegister(lexicalRewrite(intensive.value,seed+p+i),style,audience),seed+p+i);
