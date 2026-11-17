@@ -2,6 +2,11 @@ import { tokenize } from "./tokenizer.js";
 import { replaceFromGlossary } from "../assets/glossaryPtBr.js";
 
 const intensiveAlternatives = [
+  [/é um dos acontecimentos mais tristes da humanidade/gi,["figura entre os episódios mais dolorosos da história humana","está entre os eventos mais dramáticos vividos pela humanidade","representa um dos capítulos mais sofridos da trajetória humana"]],
+  [/provoca destruição, sofrimento e a perda de milhares de vidas/gi,["causa devastação, dor e a morte de milhares de pessoas","espalha destruição, sofrimento e elimina milhares de vidas","produz ruína, aflição e a morte de inúmeras pessoas"]],
+  [/os conflitos surgem por disputas territoriais, políticas, econômicas ou religiosas/gi,["os confrontos nascem de divergências territoriais, políticas, econômicas ou religiosas","os embates têm origem em disputas por território, poder político, interesses econômicos ou crenças religiosas","as hostilidades resultam de tensões territoriais, políticas, financeiras ou religiosas"]],
+  [/Além das mortes, as guerras deixam famílias desabrigadas e países devastados/gi,["Os efeitos vão além das vidas perdidas: guerras expulsam famílias de seus lares e arrasam nações","A destruição não se limita às mortes, pois famílias perdem suas casas e países inteiros ficam arrasados","Para além das vítimas fatais, os confrontos desabrigam famílias e destroem nações"]],
+  [/o diálogo, o respeito e a pretensão pela paz são fundamentais para elaborar um mundo melhor/gi,["conversar, respeitar as diferenças e buscar a paz são atitudes essenciais para construir uma sociedade melhor","o diálogo, a consideração mútua e a busca pela paz são indispensáveis à construção de um mundo melhor","a conversa, o respeito e o compromisso com a paz constituem bases para uma sociedade melhor"]],
   [/Além das relações interpessoais, a harmonia também está relacionada ao equilíbrio entre o ser humano e o meio ambiente/gi,["A harmonia não se limita aos vínculos humanos, pois também abrange a relação equilibrada entre as pessoas e a natureza","Para além do convívio entre indivíduos, a harmonia envolve o equilíbrio entre a humanidade e o ambiente natural"]],
   [/é um dos princípios fundamentais para a construção de uma convivência saudável e equilibrada/gi,["constitui uma das bases essenciais para formar relações saudáveis e estáveis","integra os fundamentos necessários ao desenvolvimento de relações positivas e equilibradas","figura entre os pilares de uma convivência saudável e estável"]],
   [/pode ser compreendida como o estado em que diferentes pessoas, ideias e situações coexistem de maneira respeitosa/gi,["corresponde à condição na qual pessoas, perspectivas e circunstâncias distintas convivem com respeito","pode ser entendida como uma condição de coexistência respeitosa entre indivíduos, pontos de vista e realidades diferentes","designa uma forma respeitosa de convivência entre pessoas, visões e circunstâncias diversas"]],
@@ -24,6 +29,8 @@ const intensiveAlternatives = [
   [/buscar a harmonia diariamente é um compromisso que beneficia não apenas cada indivíduo, mas toda a comunidade/gi,["promover o equilíbrio todos os dias constitui um compromisso capaz de favorecer cada pessoa e a coletividade","assumir diariamente uma postura harmoniosa beneficia tanto o indivíduo quanto o conjunto da comunidade"]],
 ];
 const alternatives = [
+  [/\bGeralmente\b/gi,["Em geral","Na maioria das vezes","Com frequência"]],
+  [/\bPor isso\b/gi,["Desse modo","Por essa razão","Diante disso"]],
   [/\bé um dos princípios fundamentais para\b/gi,["constitui uma base essencial para","está entre os fundamentos de"]],
   [/\bpode ser compreendida como\b/gi,["pode ser entendida como","corresponde a"]],
   [/\bpode ser compreendido como\b/gi,["pode ser entendido como","corresponde a"]],
@@ -64,7 +71,17 @@ const hash=(text,variation=0)=>{let h=2166136261+variation*997;for(const c of te
 const upper=(text)=>text?text[0].toLocaleUpperCase("pt-BR")+text.slice(1):text;
 const lower=(text)=>text?text[0].toLocaleLowerCase("pt-BR")+text.slice(1):text;
 const preserveCase=(source,value)=>source[0]===source[0]?.toUpperCase()?upper(value):value;
-const lexicalRewrite=(text,seed)=>alternatives.reduce((value,[pattern,choices],index)=>value.replace(pattern,(match)=>preserveCase(match,choices[(seed+index)%choices.length])),intensiveAlternatives.reduce((value,[pattern,choices],index)=>value.replace(pattern,(match)=>preserveCase(match,choices[(seed+index)%choices.length])),text));
+const protectIntensiveRewrite=(text,seed)=>{
+  const protectedValues=[];
+  const value=intensiveAlternatives.reduce((current,[pattern,choices],index)=>current.replace(pattern,(match)=>{
+    const replacement=preserveCase(match,choices[(seed+index)%choices.length]);
+    const token=`⟦${protectedValues.length}⟧`;
+    protectedValues.push(replacement);
+    return token;
+  }),text);
+  return {value,restore:(candidate)=>candidate.replace(/⟦(\d+)⟧/g,(_,index)=>protectedValues[Number(index)]??"")};
+};
+const lexicalRewrite=(text,seed)=>alternatives.reduce((value,[pattern,choices],index)=>value.replace(pattern,(match)=>preserveCase(match,choices[(seed+index)%choices.length])),text);
 const normalize=(text)=>text.replace(/[ \t]+/g," ").replace(/\s+([,.;:!?])/g,"$1").replace(/([.!?])(?=[A-ZÀ-Ú])/g,"$1 ").replace(/,\s*,/g,",").replace(/^(Também|Somado a isso),\s+/gi,"$1 ").replace(/\bAssim,?\s+/g,"Assim, ").trim();
 const agreementWarnings=[
   /\b(diversos|muitos|alguns|outros|esses|estes)\s+(pessoas|ideias|situações|ferramentas|estratégias|atividades)\b/i,
@@ -117,8 +134,9 @@ export function localRewrite(text,{style="Natural",audience="Público geral",var
   const source=normalize(text);const seed=hash(source,variation);const paragraphs=source.split(/\n\s*\n/).filter(Boolean);
   const rewritten=paragraphs.map((paragraph,p)=>{
     const candidate=tokenize(paragraph).sentences.flatMap(splitLong).map((sentence,i)=>{
-      const contextual=structuralRewrite(adaptRegister(lexicalRewrite(sentence,seed+p+i),style,audience),seed+p+i);
-      const rewrittenSentence=fixAgreement(normalize(replaceFromGlossary(contextual,seed+p+i)));
+      const intensive=protectIntensiveRewrite(sentence,seed+p+i);
+      const contextual=structuralRewrite(adaptRegister(lexicalRewrite(intensive.value,seed+p+i),style,audience),seed+p+i);
+      const rewrittenSentence=fixAgreement(normalize(intensive.restore(replaceFromGlossary(contextual,seed+p+i))));
       return hasAgreementWarning(rewrittenSentence)?fixAgreement(normalize(lexicalRewrite(sentence,seed+p+i))):rewrittenSentence;
     }).join(" ");
     const reviewed=fixAgreement(normalize(candidate));
