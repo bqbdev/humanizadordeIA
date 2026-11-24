@@ -29,9 +29,13 @@ export async function rewriteText(text, options = {}) {
   if (options.signal?.aborted) throw new DOMException("Operação cancelada", "AbortError");
   await new Promise((resolve) => setTimeout(resolve, 40));
   try {
-    const result = contextualLocalRewrite(text, options);
+    const candidates = Array.from({ length: 5 }, (_, index) => contextualLocalRewrite(text, {
+      ...options,
+      variation: (options.variation ?? 0) + index,
+    }));
+    const result = candidates.sort((a, b) => changedWordRatio(text, b) - changedWordRatio(text, a))[0];
     if (typeof result !== "string" || !result.trim()) throw new Error("Resultado vazio");
-    if (result.trim() === text.trim() || changedWordRatio(text, result) < 0.08) {
+    if (result.trim() === text.trim() || changedWordRatio(text, result) < 0.12) {
       const recovered = fallbackRewrite(result, options.variation);
       if (recovered.trim() !== text.trim()) return recovered;
       throw new Error("O texto precisa de uma nova construção");
@@ -41,7 +45,7 @@ export async function rewriteText(text, options = {}) {
     console.warn("O motor principal usou a recuperação segura.", error);
     try {
       const retry = contextualLocalRewrite(text, { ...options, variation: (options.variation ?? 0) + 1 });
-      if (retry.trim() !== text.trim() && changedWordRatio(text, retry) >= 0.08) return retry;
+      if (retry.trim() !== text.trim() && changedWordRatio(text, retry) >= 0.12) return retry;
     } catch (retryError) {
       console.warn("A segunda construção também precisou de recuperação.", retryError);
     }

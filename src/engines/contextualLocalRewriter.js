@@ -49,6 +49,9 @@ const hash = (text, variation = 0) => {
 const pick = (choices, seed, offset = 0) => choices[(seed + offset) % choices.length];
 const upperFirst = (value = "") => value ? value[0].toLocaleUpperCase("pt-BR") + value.slice(1) : value;
 const lowerFirst = (value = "") => value ? value[0].toLocaleLowerCase("pt-BR") + value.slice(1) : value;
+const lowerUnlessProper = (value = "") => /^(A|O|As|Os|Um|Uma|Este|Esta|Esse|Essa)\s/u.test(value)
+  ? lowerFirst(value)
+  : value;
 const keepCase = (source, replacement) => /^[A-ZÀ-Ú]/.test(source) ? upperFirst(replacement) : replacement;
 
 const independentClause = (clause) => clause
@@ -62,6 +65,24 @@ const independentClause = (clause) => clause
   .replace(/\bfavoreçam\b/giu, "favorecem")
   .replace(/\bofereçam\b/giu, "oferecem");
 
+const conditionalClause = (clause) => clause
+  .replace(/\bdeixe\b/giu, "deixar")
+  .replace(/\bdeixem\b/giu, "deixarem")
+  .replace(/\bcumpra\b/giu, "cumprir")
+  .replace(/\bcumpram\b/giu, "cumprirem")
+  .replace(/\bfaça\b/giu, "fizer")
+  .replace(/\bfaçam\b/giu, "fizerem")
+  .replace(/\bseja\b/giu, "for")
+  .replace(/\bsejam\b/giu, "forem")
+  .replace(/\btenha\b/giu, "tiver")
+  .replace(/\btenham\b/giu, "tiverem")
+  .replace(/\bpossa\b/giu, "puder")
+  .replace(/\bpossam\b/giu, "puderem")
+  .replace(/\besteja\b/giu, "estiver")
+  .replace(/\bestejam\b/giu, "estiverem")
+  .replace(/\bocorra\b/giu, "ocorrer")
+  .replace(/\bocorram\b/giu, "ocorrerem");
+
 const normalize = (text) => text
   .replace(/\r\n?/g, "\n")
   .replace(/[ \t]+/g, " ")
@@ -72,6 +93,51 @@ const normalize = (text) => text
 
 function rewriteStructure(sentence, seed) {
   let value = sentence;
+
+  // Finalidade: desloca o objetivo para o início sem alterar as informações.
+  value = value.replace(
+    /^(.+?)\s+(deve|precisa|busca|procura|pretende)\s+(.+?)\s+para\s+(.+?)([.!?])$/iu,
+    (_, subject, verb, action, purpose, end) => `Para ${lowerFirst(purpose)}, ${lowerFirst(subject)} ${verb} ${action}${end}`,
+  );
+
+  // Estratégia/meio: converte "por meio de" em uma oração introdutória.
+  value = value.replace(
+    /^(.+?)\s+pretende\s+(.+?)\s+por meio de\s+(.+?)([.!?])$/iu,
+    (_, subject, goal, means, end) => `Ao recorrer a ${lowerFirst(means)}, ${lowerFirst(subject)} busca ${goal}${end}`,
+  );
+
+  // Condição com consequência: mantém a modalidade e separa a ressalva.
+  value = value.replace(
+    /^(.+?)\s+(poderá|pode)\s+(.+?)\s+caso\s+(.+?),\s+sem prejuízo\s+d([ao])\s+(.+?)([.!?])$/iu,
+    (_, subject, modal, consequence, condition, article, reservation, end) => {
+      const resumedArticle = article.toLocaleLowerCase("pt-BR") === "a" ? "a" : "o";
+      return `${upperFirst(subject)} ${modal} ${consequence} se ${lowerFirst(conditionalClause(condition))}. Essa medida não exclui ${resumedArticle} ${reservation}${end}`;
+    },
+  );
+
+  // Simultaneidade narrativa: muda o foco da oração sem fragmentá-la.
+  value = value.replace(
+    /^Enquanto\s+(.+?),\s+(.+?)([.!?])$/iu,
+    (_, background, main, end) => `${upperFirst(main)} enquanto ${lowerFirst(background)}${end}`,
+  );
+
+  // Sequência operacional: antecipa o marco temporal.
+  value = value.replace(
+    /^(.+?)\s+antes de\s+(.+?)([.!?])$/iu,
+    (_, previousSteps, finalStep, end) => `Antes de ${lowerFirst(finalStep)}, ${lowerFirst(previousSteps)}${end}`,
+  );
+
+  // Capacidade/efeito: transforma o verbo-suporte em construção instrumental.
+  value = value.replace(
+    /^(.+?)\s+(permite|possibilita|viabiliza)\s+(.+?)([.!?])$/iu,
+    (_, subject, verb, result, end) => `Com ${lowerFirst(subject)}, torna-se possível ${lowerFirst(result)}${end}`,
+  );
+
+  // Gerúndio explicativo: desloca a ação secundária sem inventar um novo sujeito.
+  value = value.replace(
+    /^(.+?),\s+(observando|criando|promovendo|favorecendo|garantindo|mantendo|ampliando|reduzindo)\s+(.+?)([.!?])$/iu,
+    (_, main, gerund, effect, end) => `${upperFirst(gerund)} ${effect}, ${lowerUnlessProper(main)}${end}`,
+  );
 
   // Converte construções recorrentes completas, preservando sujeito e complementos.
   value = value.replace(
