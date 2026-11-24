@@ -1,5 +1,5 @@
 import { analyze, readabilityLabel } from "./analysis/analyzer.js";
-import { rewriteText } from "./services/aiService.js";
+import { rewriteText } from "./services/aiService.js?v=20261124-2";
 import { storage } from "./services/storageService.js";
 import { diffWords } from "./utils/diff.js";
 import { exportTxt, exportMarkdown, exportDocx, exportPdf } from "./services/exportService.js";

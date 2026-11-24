@@ -1,4 +1,4 @@
-import { contextualLocalRewrite } from "../engines/contextualLocalRewriter.js";
+import { contextualLocalRewrite } from "../engines/contextualLocalRewriter.js?v=20261124-2";
 
 const normalizeFallback = (text = "") => text
   .replace(/\r\n?/g, "\n")
