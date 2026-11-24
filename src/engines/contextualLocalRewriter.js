@@ -94,6 +94,32 @@ const normalize = (text) => text
 function rewriteStructure(sentence, seed) {
   let value = sentence;
 
+  // Definição enfática: troca a construção previsível "X é um dos pilares".
+  value = value.replace(
+    /^(.+?) é (um|uma) dos? (principais|maiores|mais importantes) (pilares|bases|elementos|fatores) para (.+?)([.!?])$/iu,
+    (_, subject, article, emphasis, noun, purpose, end) => seed % 2
+      ? `${upperFirst(purpose)} encontra em ${lowerFirst(subject)} uma de suas bases mais importantes${end}`
+      : `Entre as bases de ${lowerFirst(purpose)}, destaca-se ${lowerFirst(subject)}${end}`,
+  );
+
+  // Contraste "mais do que": substitui a fórmula por uma relação direta.
+  value = value.replace(
+    /^Mais do que (.+?),\s*(.+?) significa (.+?)([.!?])$/iu,
+    (_, limit, subject, expansion, end) => `${upperFirst(subject)} não se resume a ${lowerFirst(limit)}: também envolve ${lowerFirst(expansion)}${end}`,
+  );
+
+  // Investimento/ação abstrata: converte predicação nominal em consequência.
+  value = value.replace(
+    /^(Investir|Apostar) (?:em|n[ao]) (.+?) é (construir|promover|fortalecer|criar) (.+?)([.!?])$/iu,
+    (_, action, target, verb, consequence, end) => `Quando se investe em ${lowerFirst(target)}, criam-se condições para ${lowerFirst(consequence)}${end}`,
+  );
+
+  // Pronome instrumental no início: reduz a cadência enumerativa previsível.
+  value = value.replace(
+    /^Por meio del([ae]),\s*(.+?) (desenvolvem|ampliam|constroem|adquirem) (.+?)([.!?])$/iu,
+    (_, gender, subject, verb, result, end) => `É nesse processo que ${lowerFirst(subject)} ${verb} ${result}${end}`,
+  );
+
   // Finalidade: desloca o objetivo para o início sem alterar as informações.
   value = value.replace(
     /^(.+?)\s+(deve|precisa|busca|procura|pretende)\s+(.+?)\s+para\s+(.+?)([.!?])$/iu,
@@ -196,6 +222,10 @@ function rewriteSafeWords(sentence, seed) {
 
 function polish(sentence) {
   return normalize(sentence)
+    .replace(/\bde a\b/giu, "da")
+    .replace(/\bde o\b/giu, "do")
+    .replace(/\bde as\b/giu, "das")
+    .replace(/\bde os\b/giu, "dos")
     .replace(/\ba bem-estar\b/giu, "o bem-estar")
     .replace(/\buma bem-estar\b/giu, "um bem-estar")
     .replace(/^Também,\s+/iu, "Também ")

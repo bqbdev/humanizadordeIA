@@ -1,9 +1,10 @@
 import { analyze, readabilityLabel } from "./analysis/analyzer.js";
-import { rewriteText } from "./services/aiService.js?v=20261124-2";
+import { rewriteText } from "./services/aiService.js?v=20261124-3";
 import { storage } from "./services/storageService.js";
 import { diffWords } from "./utils/diff.js";
 import { exportTxt, exportMarkdown, exportDocx, exportPdf } from "./services/exportService.js";
 import { icon } from "./utils/icons.js";
+import { learnStyleProfile, structuralDifference } from "./engines/adaptiveStyle.js";
 
 const MAX_CHARACTERS = 2000;
 const SAMPLE = `Escrever bem não significa usar palavras difíceis. Um bom texto conduz o leitor com clareza, apresenta cada ideia no momento certo e evita repetições que não acrescentam significado.
@@ -21,6 +22,8 @@ const state = {
   history: storage.loadHistory(),
   controller: null,
   activeTab: "editor",
+  styleProfile: storage.loadStyleProfile(),
+  lastGeneratedResult: "",
 };
 
 document.documentElement.dataset.theme = prefs.theme;
@@ -100,7 +103,7 @@ document.querySelector("#app").innerHTML = `
       </div>
 
       <div class="primary-row">
-        <div class="privacy-note"><span>${icon("key", 15)}</span><span id="providerLabel">Reescrita rápida local · nenhuma chave de API</span></div>
+        <div class="privacy-note"><span>${icon("key", 15)}</span><span id="providerLabel">${state.styleProfile.samples ? `Perfil linguístico local · ${state.styleProfile.samples} edição${state.styleProfile.samples === 1 ? " aprendida" : " aprendidas"}` : "Perfil linguístico local · aprende com suas edições"}</span></div>
         <button class="primary-btn" id="rewriteBtn">${icon("sparkle", 18)} <span>Reescrever texto</span> ${icon("arrow", 18)}</button>
       </div>
     </section>
@@ -237,7 +240,19 @@ originalEl.addEventListener("paste", (event) => {
   }
 });
 
-resultEl.addEventListener("input", () => { state.result = resultEl.innerText; updateResult(); scheduleSave(); });
+let styleLearningTimer;
+resultEl.addEventListener("input", () => {
+  state.result = resultEl.innerText;
+  updateResult(); scheduleSave();
+  clearTimeout(styleLearningTimer);
+  styleLearningTimer = setTimeout(() => {
+    if (!state.lastGeneratedResult || structuralDifference(state.lastGeneratedResult, state.result) < 0.05) return;
+    state.styleProfile = learnStyleProfile(state.styleProfile, state.result);
+    storage.saveStyleProfile(state.styleProfile);
+    state.lastGeneratedResult = state.result;
+    $("#providerLabel").textContent = `Perfil linguístico local · ${state.styleProfile.samples} edição${state.styleProfile.samples === 1 ? " aprendida" : " aprendidas"}`;
+  }, 1400);
+});
 
 async function runRewrite(isVariation = false) {
   if (!state.original.trim()) return toast("Escreva ou cole um texto primeiro.", "error");
@@ -253,6 +268,7 @@ async function runRewrite(isVariation = false) {
     const result = await rewriteText(state.original, { ...state, ...prefs, signal: state.controller.signal });
     if (!result?.trim()) throw new Error("Não foi possível gerar o texto. Tente novamente.");
     state.result = result;
+    state.lastGeneratedResult = result;
     resultEl.textContent = result;
     state.history = storage.pushHistory({ id: crypto.randomUUID(), date: new Date().toISOString(), original: state.original, result, style: state.style });
     updateResult(); renderHistory(); save();

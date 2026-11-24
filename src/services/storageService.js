@@ -1,4 +1,4 @@
-const KEYS = { document: "clareia.document.v1", settings: "clareia.settings.v1", history: "clareia.history.v1" };
+const KEYS = { document: "clareia.document.v1", settings: "clareia.settings.v1", history: "clareia.history.v1", styleProfile: "clareia.style-profile.v1" };
 const safeParse = (value, fallback) => { try { return JSON.parse(value) ?? fallback; } catch { return fallback; } };
 
 export const storage = {
@@ -7,6 +7,8 @@ export const storage = {
   loadSettings: () => safeParse(localStorage.getItem(KEYS.settings), {}),
   saveSettings: (data) => localStorage.setItem(KEYS.settings, JSON.stringify(data)),
   loadHistory: () => safeParse(localStorage.getItem(KEYS.history), []),
+  loadStyleProfile: () => safeParse(localStorage.getItem(KEYS.styleProfile), {}),
+  saveStyleProfile: (profile) => localStorage.setItem(KEYS.styleProfile, JSON.stringify(profile)),
   pushHistory(version) {
     const history = [version, ...this.loadHistory()].slice(0, 20);
     localStorage.setItem(KEYS.history, JSON.stringify(history));

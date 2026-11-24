@@ -1,4 +1,5 @@
-import { contextualLocalRewrite } from "../engines/contextualLocalRewriter.js?v=20261124-2";
+import { contextualLocalRewrite } from "../engines/contextualLocalRewriter.js?v=20261124-3";
+import { adaptiveCandidateScore } from "../engines/adaptiveStyle.js";
 
 const normalizeFallback = (text = "") => text
   .replace(/\r\n?/g, "\n")
@@ -29,11 +30,15 @@ export async function rewriteText(text, options = {}) {
   if (options.signal?.aborted) throw new DOMException("Operação cancelada", "AbortError");
   await new Promise((resolve) => setTimeout(resolve, 40));
   try {
-    const candidates = Array.from({ length: 5 }, (_, index) => contextualLocalRewrite(text, {
+    const candidates = Array.from({ length: 9 }, (_, index) => contextualLocalRewrite(text, {
       ...options,
       variation: (options.variation ?? 0) + index,
     }));
-    const result = candidates.sort((a, b) => changedWordRatio(text, b) - changedWordRatio(text, a))[0];
+    const result = candidates.sort((a, b) => {
+      const adaptive = adaptiveCandidateScore(text, b, options.styleProfile) - adaptiveCandidateScore(text, a, options.styleProfile);
+      if (Math.abs(adaptive) > 0.01) return adaptive;
+      return changedWordRatio(text, b) - changedWordRatio(text, a);
+    })[0];
     if (typeof result !== "string" || !result.trim()) throw new Error("Resultado vazio");
     if (result.trim() === text.trim() || changedWordRatio(text, result) < 0.12) {
       const recovered = fallbackRewrite(result, options.variation);

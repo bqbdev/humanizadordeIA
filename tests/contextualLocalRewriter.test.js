@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { contextualLocalRewrite } from "../src/engines/contextualLocalRewriter.js";
 import { rewriteText } from "../src/services/aiService.js";
+import { adaptiveCandidateScore, learnStyleProfile } from "../src/engines/adaptiveStyle.js";
 
 test("reescreve um texto geral sem alterar seu tema", () => {
   const source = "A tecnologia está cada vez mais presente no cotidiano das pessoas, transformando a maneira como nos comunicamos, trabalhamos e adquirimos conhecimento. Embora seus avanços proporcionem inúmeras facilidades, o uso excessivo dos recursos digitais pode comprometer as relações humanas e a qualidade de vida. Nesse contexto, torna-se fundamental estabelecer um equilíbrio entre os benefícios da inovação e a preservação das interações sociais. Assim, utilizar a tecnologia de maneira consciente e responsável é essencial para aproveitar suas vantagens sem prejudicar o bem-estar individual e coletivo.";
@@ -56,5 +57,28 @@ test("o serviço completo não rejeita uma reordenação estrutural válida", as
 
   assert.notEqual(result, source);
   assert.match(result, /^Antes de enviar a confirmação ao usuário,/i);
+});
+
+test("reestrutura o exemplo educacional sem mudar suas ideias centrais", async () => {
+  const source = "A educação é um dos principais pilares para a transformação da sociedade. Por meio dela, as pessoas desenvolvem conhecimentos, habilidades e valores essenciais para a vida. Mais do que transmitir conteúdos, educar significa estimular o pensamento crítico, a criatividade e o respeito às diferenças. Investir na educação é construir um futuro com mais oportunidades, igualdade e desenvolvimento para todos.";
+  const result = await rewriteText(source);
+
+  assert.notEqual(result, source);
+  assert.match(result, /educação/i);
+  assert.match(result, /pensamento crítico/i);
+  assert.match(result, /oportunidades/i);
+  assert.doesNotMatch(result, /é um dos principais pilares/i);
+  assert.doesNotMatch(result, /mais do que transmitir conteúdos/i);
+  assert.doesNotMatch(result, /\bde a\b/i);
+  assert.doesNotMatch(result, /investir na educação é construir/i);
+});
+
+test("perfil adaptativo aprende gradualmente e influencia a escolha", () => {
+  const shortProfile = learnStyleProfile({}, "Frases curtas funcionam. Elas dão ritmo. A leitura fica direta.");
+  const concise = "A proposta ajuda. Ela organiza as ideias. O leitor entende melhor.";
+  const dense = "A proposta contribui para organizar as ideias apresentadas, oferecendo ao leitor uma compreensão mais clara e progressiva do conteúdo desenvolvido.";
+
+  assert.equal(shortProfile.samples, 1);
+  assert.ok(adaptiveCandidateScore(dense, concise, shortProfile) > adaptiveCandidateScore(concise, dense, shortProfile));
 });
 
